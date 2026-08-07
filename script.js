@@ -197,39 +197,49 @@ function turnLeft() {
 }
 
 function lightTile() {
-  lights.forEach((light) => {
-    if (light.x === robotX && light.y === robotY) {
-      light.on = true
-    }
-  })
+    lights.forEach((light) => {
+        if (light.x === robotX && light.y === robotY) {
+            light.on = true
+        }
+    })
+
+    checkWin()
 }
 
 async function runCommands() {
-  if (commands.length === 0) {
-    alert("Adicione comandos antes de executar.")
-    return
-  }
-  running = true
-  setControlsEnabled(false)
-
-  for (const cmd of commands) {
-    if (cmd === "frente") {
-      moveForward()
-    } else if (cmd === "direita") {
-      turnRight()
-    } else if (cmd === "esquerda") {
-      turnLeft()
+    if (commands.length === 0) {
+        alert("Adicione comandos antes de executar.")
+        return
     }
 
-    lightTile()
-    updateGrid()
-    await new Promise((resolve) => setTimeout(resolve, 400))
-  }
+    running = true
+    setControlsEnabled(false)
 
-  commands = []
-  updateStatus()
-  running = false
-  setControlsEnabled(true)
+    for (const cmd of commands) {
+        if (cmd === "frente") {
+            moveForward()
+        } else if (cmd === "direita") {
+            turnRight()
+        } else if (cmd === "esquerda") {
+            turnLeft()
+        }
+
+        lightTile()
+        updateGrid()
+
+        if (lights.every((light) => light.on)) {
+            commands = []
+            updateStatus()
+            return
+        }
+
+        await new Promise((resolve) => setTimeout(resolve, 400))
+    }
+
+    commands = []
+    updateStatus()
+    running = false
+    setControlsEnabled(true)
 }
 
 function resetLevel() {
@@ -243,6 +253,35 @@ function resetLevel() {
   ]
 
   updateGrid()
+}
+
+function checkWin() {
+    const allLightsOn = lights.every((light) => light.on)
+
+    if (allLightsOn) {
+        running = false
+        setControlsEnabled(false)
+
+        setTimeout(() => {
+            const modal = document.getElementById("win-modal")
+            modal.classList.add("show")
+        }, 300)
+
+        return true
+    }
+
+    return false
+}
+
+function closeWinModal() {
+    const modal = document.getElementById("win-modal")
+
+    modal.classList.remove("show")
+
+    setTimeout(() => {
+        resetLevel()
+        setControlsEnabled(true)
+    }, 250)
 }
 
 createGrid()
