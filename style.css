@@ -669,3 +669,169 @@ button:active {
 
     z-index: 3;
 }
+
+
+
+
+/* =========================================
+   TELA INICIAL
+   ========================================= */
+
+.start-screen {
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 30px 20px;
+    box-sizing: border-box;
+}
+
+
+.start-card {
+    width: min(520px, 100%);
+    background: rgba(255, 255, 255, 0.94);
+    border: 1px solid rgba(148, 163, 184, 0.25);
+    border-radius: 28px;
+    padding: 40px;
+    text-align: center;
+    box-shadow: 0 25px 70px rgba(15, 23, 42, 0.12);
+}
+
+
+.start-icon {
+    font-size: 64px;
+    margin-bottom: 10px;
+}
+
+
+.start-card h1 {
+    margin: 0;
+    font-size: clamp(2rem, 5vw, 2.8rem);
+    letter-spacing: -0.04em;
+    color: #0f172a;
+}
+
+
+.start-description {
+    margin: 12px 0 30px;
+    color: #64748b;
+    font-size: 16px;
+}
+
+
+/* Opções de nível */
+
+.level-options {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+
+.level-card {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 18px;
+    border-radius: 18px;
+    border: 1px solid rgba(148, 163, 184, 0.25);
+    background: #f8fafc;
+    color: #0f172a;
+    text-align: left;
+    cursor: pointer;
+
+    transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease,
+        border-color 0.2s ease,
+        background 0.2s ease;
+}
+
+
+.level-card:hover {
+    transform: translateY(-3px);
+    background: #ffffff;
+    box-shadow: 0 12px 30px rgba(15, 23, 42, 0.10);
+}
+
+
+.level-card:active {
+    transform: translateY(0);
+}
+
+
+.level-icon {
+    font-size: 30px;
+    flex-shrink: 0;
+}
+
+
+.level-content {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+
+.level-content strong {
+    font-size: 18px;
+}
+
+
+.level-content small {
+    color: #64748b;
+    font-size: 13px;
+}
+
+
+/* Cores dos níveis */
+
+.level-card.easy:hover {
+    border-color: #22c55e;
+}
+
+
+.level-card.medium:hover {
+    border-color: #eab308;
+}
+
+
+.level-card.hard:hover {
+    border-color: #ef4444;
+}
+
+
+/* =========================================
+   TELA DO JOGO
+   ========================================= */
+
+.game-screen {
+    min-height: 100vh;
+}
+
+
+.hidden {
+    display: none !important;
+}
+
+
+/* =========================================
+   RESPONSIVO
+   ========================================= */
+
+@media (max-width: 600px) {
+
+    .start-card {
+        padding: 30px 20px;
+    }
+
+    .start-icon {
+        font-size: 52px;
+    }
+
+    .level-card {
+        padding: 15px;
+    }
+
+}

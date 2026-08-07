@@ -1,3 +1,36 @@
+
+let selectedLevel = null
+
+const levelSettings = {
+    facil: {
+        lights: 2
+    },
+
+    medio: {
+        lights: 5
+    },
+
+    dificil: {
+        lights: 11
+    }
+}
+
+function startGame(level) {
+    selectedLevel = level
+
+    const startScreen = document.getElementById("start-screen")
+    const gameScreen = document.getElementById("game-screen")
+
+    startScreen.classList.add("hidden")
+    gameScreen.classList.remove("hidden")
+
+    resetLevel()
+}
+
+
+
+
+
 const gridSize = 5
 
 const grid = document.getElementById("grid")

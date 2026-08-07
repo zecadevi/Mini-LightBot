@@ -6,99 +6,115 @@
     </head>
     <body>
 
-        <header class="app-header">
-            <div>
-                <h1>MINI LIGHTBOT</h1>
+        <section id="start-screen" class="start-screen"> 
+            <div class="start-card"> 
+                
+                <h1>MINI LIGHTBOT</h1> 
+                <p class="start-description"> Escolha um nível para começar sua aventura! </p> 
+                <div class="level-options"> 
+                    <button type="button" class="level-card easy" onclick="startGame('facil')" > 
+                        <span class="level-icon">🟢</span> 
+                        <span class="level-content"> <strong>Fácil</strong> 
+                        </span> </button> <button type="button" class="level-card medium" onclick="startGame('medio')" > 
+                        <span class="level-icon">🟡</span> <span class="level-content"> 
+                            <strong>Médio</strong> 
+                        </span> </button> <button type="button" class="level-card hard" onclick="startGame('dificil')" > 
+                        <span class="level-icon">🔴</span> <span class="level-content"> 
+                            <strong>Difícil</strong> 
+                        </span> </button> </div> </div> </section>
+
+        <div id="game-screen" class="game-screen hidden">
+            <header class="app-header">
+                <div>
+                    <h1>MINI LIGHTBOT</h1>
+                </div>
+            </header>
+
+            <main class="layout">
+                <section class="panel board-panel">
+                    <div class="panel-header">
+                        <div class="status">
+                            <span id="direction">Direção: →</span>
+                            <span id="position">Posição: 0,0</span>
+                        </div>
+                    </div>
+                    <div class="grid-view">
+                        <div id="grid"></div>
+                    </div>
+                </section>
+
+                <section class="panel controls-panel">
+                    <div class="panel-header">
+                        <span class="panel-title">Comandos</span>
+                    </div>
+
+                    <div id="controls" class="control-buttons"> 
+                        <div class="action-move">
+                            <button type="button" onclick="runCommands()">Executar</button>
+                            <button type="button" onclick="resetLevel()">Reiniciar</button>
+                        </div>
+                    </div>
+
+                    <div id="command-list" class="command-card compact">
+                        <div class="compact-row">
+                            <span id="command-count">Comandos: 0</span>
+                        </div>
+                        <div id="command-preview" class="preview"></div>
+                    </div>
+                
+                    <div id="controls" class="control-buttons">
+                        <div class="add-move">
+                            <button type="button" onclick="addCommand('frente')">Frente</button>
+                            <button type="button" onclick="addCommand('direita')">Direita</button>
+                            <button type="button" onclick="addCommand('esquerda')">Esquerda</button>
+                        </div>
+                    </div>
+                </section>
+            </main>
+
+            <div id="question-modal" class="modal-overlay">
+
+            <div class="modal question-modal">
+
+                <div class="modal-icon">💡</div>
+
+                <span id="question-difficulty" class="question-difficulty">
+                    TI • Médio
+                </span>
+
+                <h2 id="question-title">
+                    Pergunta de TI
+                </h2>
+
+                <p id="question-text"></p>
+
+                <div id="question-options" class="question-options"></div>
+
+                <div id="question-feedback" class="question-feedback"></div>
+
             </div>
-        </header>
 
-        <main class="layout">
-            <section class="panel board-panel">
-                <div class="panel-header">
-                    <div class="status">
-                        <span id="direction">Direção: →</span>
-                        <span id="position">Posição: 0,0</span>
-                    </div>
+            <!-- MODAL DE VITÓRIA -->
+            <div id="win-modal" class="modal-overlay">
+
+                <div class="modal">
+
+                    <div class="modal-icon">🎉</div>
+
+                    <h2>Parabéns!</h2>
+
+                    <p>
+                        Você conseguiu acender todas as luzes!
+                    </p>
+
+                    <button
+                        type="button"
+                        onclick="closeWinModal()">
+                        OK
+                    </button>
                 </div>
-                <div class="grid-view">
-                    <div id="grid"></div>
-                </div>
-            </section>
-
-            <section class="panel controls-panel">
-                <div class="panel-header">
-                    <span class="panel-title">Comandos</span>
-                </div>
-
-                <div id="controls" class="control-buttons"> 
-                    <div class="action-move">
-                        <button type="button" onclick="runCommands()">Executar</button>
-                        <button type="button" onclick="resetLevel()">Reiniciar</button>
-                    </div>
-                </div>
-
-                <div id="command-list" class="command-card compact">
-                    <div class="compact-row">
-                        <span id="command-count">Comandos: 0</span>
-                    </div>
-                    <div id="command-preview" class="preview"></div>
-                </div>
-            
-                <div id="controls" class="control-buttons">
-                    <div class="add-move">
-                        <button type="button" onclick="addCommand('frente')">Frente</button>
-                        <button type="button" onclick="addCommand('direita')">Direita</button>
-                        <button type="button" onclick="addCommand('esquerda')">Esquerda</button>
-                    </div>
-                </div>
-            </section>
-        </main>
-
-        <div id="question-modal" class="modal-overlay">
-
-        <div class="modal question-modal">
-
-            <div class="modal-icon">💡</div>
-
-            <span id="question-difficulty" class="question-difficulty">
-                TI • Médio
-            </span>
-
-            <h2 id="question-title">
-                Pergunta de TI
-            </h2>
-
-            <p id="question-text"></p>
-
-            <div id="question-options" class="question-options"></div>
-
-            <div id="question-feedback" class="question-feedback"></div>
-
+            </div>
         </div>
-
-    </div>
-
-
-    <!-- MODAL DE VITÓRIA -->
-    <div id="win-modal" class="modal-overlay">
-
-        <div class="modal">
-
-            <div class="modal-icon">🎉</div>
-
-            <h2>Parabéns!</h2>
-
-            <p>
-                Você conseguiu acender todas as luzes!
-            </p>
-
-            <button
-                type="button"
-                onclick="closeWinModal()">
-                OK
-            </button>
-        </div>
-    </div>
 
         <script src="script.js"></script>
 
