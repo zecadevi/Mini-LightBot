@@ -1,0 +1,17 @@
+
+#grid{
+  display:grid;
+  grid-template-columns:repeat(5,60px);
+  gap:5px;
+  margin:20px;
+}
+
+.tile{
+  width:60px;
+  height:60px;
+  background:#ccc;
+}
+
+.robot{
+  background:orange;
+}
