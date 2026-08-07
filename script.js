@@ -1,287 +1,1063 @@
 const gridSize = 5
+
 const grid = document.getElementById("grid")
 const commandList = document.getElementById("command-list")
 const directionDisplay = document.getElementById("direction")
 const positionDisplay = document.getElementById("position")
 
 const arrows = {
-  right: "→",
-  left: "←",
-  up: "↑",
-  down: "↓"
+    right: "→",
+    left: "←",
+    up: "↑",
+    down: "↓"
 }
 
+
+// ======================================================
+// LÂMPADAS
+// ======================================================
+
 let lights = [
-  { x: 2, y: 1, on: false },
-  { x: 4, y: 3, on: false }
+    {
+        x: 2,
+        y: 1,
+        on: false,
+        questionUsed: []
+    },
+    {
+        x: 4,
+        y: 3,
+        on: false,
+        questionUsed: []
+    }
 ]
+
+
+// ======================================================
+// ESTADO DO ROBÔ
+// ======================================================
 
 let robotX = 0
 let robotY = 0
+
 let direction = "right"
+
 let commands = []
+
 let running = false
 
+let quizActive = false
+
+let currentQuestion = null
+
+let currentLight = null
+
+let questionResolver = null
+
+
+// ======================================================
+// BANCO DE PERGUNTAS
+// DIFICULDADE: MÉDIA
+// ======================================================
+
+const questionBank = [
+
+    {
+        question: "O que significa HTML?",
+        options: [
+            "HyperText Markup Language",
+            "HighText Machine Language",
+            "HyperTool Multi Language",
+            "HomeText Markup Language"
+        ],
+        correct: 0
+    },
+
+    {
+        question: "Qual linguagem é executada principalmente no navegador para criar interações em páginas web?",
+        options: [
+            "JavaScript",
+            "SQL",
+            "Python",
+            "C"
+        ],
+        correct: 0
+    },
+
+    {
+        question: "Qual propriedade CSS é utilizada para alterar a cor de fundo de um elemento?",
+        options: [
+            "background-color",
+            "font-color",
+            "color-background",
+            "bg-color"
+        ],
+        correct: 0
+    },
+
+    {
+        question: "Qual destas opções representa uma estrutura de repetição?",
+        options: [
+            "for",
+            "const",
+            "return",
+            "import"
+        ],
+        correct: 0
+    },
+
+    {
+        question: "Em JavaScript, qual palavra-chave é utilizada para declarar uma variável que não pode ser reatribuída?",
+        options: [
+            "const",
+            "let",
+            "var",
+            "static"
+        ],
+        correct: 0
+    },
+
+    {
+        question: "Qual tecnologia é utilizada para estruturar o conteúdo de uma página web?",
+        options: [
+            "HTML",
+            "CSS",
+            "JavaScript",
+            "SQL"
+        ],
+        correct: 0
+    },
+
+    {
+        question: "Qual tecnologia é responsável principalmente pela aparência e estilização de uma página web?",
+        options: [
+            "CSS",
+            "HTML",
+            "SQL",
+            "JSON"
+        ],
+        correct: 0
+    },
+
+    {
+        question: "O que é uma função em programação?",
+        options: [
+            "Um bloco de código criado para executar uma tarefa",
+            "Um tipo de banco de dados",
+            "Um arquivo de imagem",
+            "Um sistema operacional"
+        ],
+        correct: 0
+    },
+
+    {
+        question: "Qual destas opções é um banco de dados?",
+        options: [
+            "MySQL",
+            "HTML",
+            "CSS",
+            "Git"
+        ],
+        correct: 0
+    },
+
+    {
+        question: "Qual comando Git é utilizado para enviar alterações para um repositório remoto?",
+        options: [
+            "git push",
+            "git pull",
+            "git clone",
+            "git init"
+        ],
+        correct: 0
+    },
+
+    {
+        question: "Qual tipo de dado JavaScript representa verdadeiro ou falso?",
+        options: [
+            "Boolean",
+            "String",
+            "Number",
+            "Array"
+        ],
+        correct: 0
+    },
+
+    {
+        question: "O que significa API?",
+        options: [
+            "Application Programming Interface",
+            "Advanced Programming Internet",
+            "Application Process Integration",
+            "Automated Program Interface"
+        ],
+        correct: 0
+    }
+
+]
+
+
+// ======================================================
+// CRIA O TABULEIRO
+// ======================================================
+
 function createGrid() {
-  grid.innerHTML = ""
 
-  for (let i = 0; i < gridSize * gridSize; i++) {
-    const tile = document.createElement("div")
-    tile.classList.add("tile")
-    grid.appendChild(tile)
-  }
+    grid.innerHTML = ""
 
-  updateGrid()
+    for (let i = 0; i < gridSize * gridSize; i++) {
+
+        const tile = document.createElement("div")
+
+        tile.classList.add("tile")
+
+        grid.appendChild(tile)
+    }
+
+    updateGrid()
 }
+
+
+// ======================================================
+// ATUALIZA O TABULEIRO
+// ======================================================
 
 function updateGrid() {
-  const tiles = document.querySelectorAll(".tile")
 
-  tiles.forEach((tile, index) => {
-    tile.className = "tile"
-    tile.innerHTML = ""
+    const tiles = document.querySelectorAll(".tile")
 
-    const x = index % gridSize
-    const y = Math.floor(index / gridSize)
-    const light = lights.find((lightItem) => lightItem.x === x && lightItem.y === y)
+    tiles.forEach((tile, index) => {
 
-    if (light) {
-      tile.classList.add(light.on ? "light-on" : "light-off")
-    }
+        tile.className = "tile"
 
-    if (x === robotX && y === robotY) {
-      tile.classList.add("robot")
-      tile.innerHTML = "<img src=\"./assets/robot.svg\" alt=\"Lightbot\" class=\"robot-icon\" />"
-    }
-  })
+        tile.innerHTML = ""
 
-  updateStatus()
-}
+        const x = index % gridSize
 
-function updateStatus() {
-  directionDisplay.textContent = `Direção: ${arrows[direction]}`
-  positionDisplay.textContent = `Posição: ${robotX},${robotY}`
-  const countEl = document.getElementById('command-count')
-  const previewEl = document.getElementById('command-preview')
+        const y = Math.floor(index / gridSize)
 
-  if (commands.length === 0) {
-    countEl.textContent = 'Comandos: 0'
-    previewEl.textContent = ''
-  } else {
-    countEl.textContent = `Comandos: ${commands.length}`
-    const preview = commands.slice(0, 6).join(' • ')
-    previewEl.textContent = preview + (commands.length > 6 ? ' • …' : '')
-  }
-}
 
-function addCommand(cmd) {
-  commands.push(cmd)
-  updateStatus()
-}
+        // Procura uma lâmpada nessa posição
 
-function addSelectedCommands() {
-  const selector = document.getElementById("command-selector")
-  const selectedValues = Array.from(selector.selectedOptions).map((option) => option.value)
+        const light = lights.find(
+            lightItem =>
+                lightItem.x === x &&
+                lightItem.y === y
+        )
 
-  if (selectedValues.length === 0) {
-    alert("Selecione pelo menos um comando para adicionar.")
-    return
-  }
 
-  commands.push(...selectedValues)
-  selector.selectedIndex = -1
-  updateStatus()
-}
+        // -----------------------------
+        // LÂMPADA
+        // -----------------------------
 
-function clearCommands() {
-  commands = []
-  updateStatus()
-}
+        if (light) {
 
-function setControlsEnabled(enabled) {
-  const controls = document.querySelectorAll('.control-buttons button, #command-text, #command-input button')
-  controls.forEach(el => { el.disabled = !enabled })
-}
+            tile.classList.add(
+                light.on
+                    ? "light-on"
+                    : "light-off"
+            )
 
-function stepMove(dir) {
-  if (running) return
+            const lamp = document.createElement("div")
 
-  // map arrow-like directions to robot orientation
-  if (dir === 'up') direction = 'up'
-  else if (dir === 'down') direction = 'down'
-  else if (dir === 'left') direction = 'left'
-  else if (dir === 'right') direction = 'right'
+            lamp.classList.add("lamp")
 
-  moveForward()
-  lightTile()
-  updateGrid()
-}
+            lamp.textContent = "💡"
 
-// keyboard support for arrow keys
-document.addEventListener('keydown', (e) => {
-  if (running) return
-  if (e.key === 'ArrowUp') stepMove('up')
-  else if (e.key === 'ArrowDown') stepMove('down')
-  else if (e.key === 'ArrowLeft') stepMove('left')
-  else if (e.key === 'ArrowRight') stepMove('right')
-})
+            if (light.on) {
+                lamp.classList.add("lamp-on")
+            }
 
-function addCommandList() {
-  const text = document.getElementById("command-text").value.trim()
-
-  if (!text) {
-    alert("Digite pelo menos um comando.")
-    return
-  }
-
-  const lines = text
-    .split(/\r?\n/)
-    .map((line) => line.trim().replace(/^[-*\s]+/, ""))
-    .filter(Boolean)
-    .map((line) => line.toLowerCase())
-
-  const allowed = ["frente", "direita", "esquerda"]
-  const invalid = lines.filter((line) => !allowed.includes(line))
-
-  if (invalid.length > 0) {
-    alert(`Comando inválido: ${invalid[0]}. Use frente, direita ou esquerda.`)
-    return
-  }
-
-  commands.push(...lines)
-  document.getElementById("command-text").value = ""
-  updateStatus()
-}
-
-function toggleCommandEditor() {
-  const el = document.getElementById('command-input')
-  el.classList.toggle('hidden')
-  const btn = document.getElementById('toggle-editor')
-  btn.textContent = el.classList.contains('hidden') ? 'Editar' : 'Fechar'
-}
-
-function moveForward() {
-  if (direction === "right" && robotX < gridSize - 1) {
-    robotX++
-  } else if (direction === "left" && robotX > 0) {
-    robotX--
-  } else if (direction === "down" && robotY < gridSize - 1) {
-    robotY++
-  } else if (direction === "up" && robotY > 0) {
-    robotY--
-  }
-}
-
-function turnRight() {
-  if (direction === "right") {
-    direction = "down"
-  } else if (direction === "down") {
-    direction = "left"
-  } else if (direction === "left") {
-    direction = "up"
-  } else if (direction === "up") {
-    direction = "right"
-  }
-}
-
-function turnLeft() {
-  if (direction === "right") {
-    direction = "up"
-  } else if (direction === "up") {
-    direction = "left"
-  } else if (direction === "left") {
-    direction = "down"
-  } else if (direction === "down") {
-    direction = "right"
-  }
-}
-
-function lightTile() {
-    lights.forEach((light) => {
-        if (light.x === robotX && light.y === robotY) {
-            light.on = true
+            tile.appendChild(lamp)
         }
+
+
+        // -----------------------------
+        // ROBÔ
+        // -----------------------------
+
+        if (x === robotX && y === robotY) {
+
+            tile.classList.add("robot")
+
+            const robot = document.createElement("img")
+
+            robot.src = "./assets/robot.svg"
+
+            robot.alt = "Lightbot"
+
+            robot.classList.add("robot-icon")
+
+            tile.appendChild(robot)
+        }
+
     })
 
-    checkWin()
+    updateStatus()
 }
 
-async function runCommands() {
+
+// ======================================================
+// STATUS
+// ======================================================
+
+function updateStatus() {
+
+    directionDisplay.textContent =
+        `Direção: ${arrows[direction]}`
+
+    positionDisplay.textContent =
+        `Posição: ${robotX},${robotY}`
+
+
+    const countEl =
+        document.getElementById("command-count")
+
+    const previewEl =
+        document.getElementById("command-preview")
+
+
     if (commands.length === 0) {
-        alert("Adicione comandos antes de executar.")
+
+        countEl.textContent = "Comandos: 0"
+
+        previewEl.textContent = ""
+
+    } else {
+
+        countEl.textContent =
+            `Comandos: ${commands.length}`
+
+        const preview =
+            commands
+                .slice(0, 6)
+                .join(" • ")
+
+        previewEl.textContent =
+            preview +
+            (commands.length > 6
+                ? " • …"
+                : "")
+    }
+}
+
+
+// ======================================================
+// ADICIONAR COMANDO
+// ======================================================
+
+function addCommand(cmd) {
+
+    if (running || quizActive) {
         return
     }
 
-    running = true
-    setControlsEnabled(false)
+    commands.push(cmd)
 
-    for (const cmd of commands) {
-        if (cmd === "frente") {
-            moveForward()
-        } else if (cmd === "direita") {
-            turnRight()
-        } else if (cmd === "esquerda") {
-            turnLeft()
-        }
+    updateStatus()
+}
 
-        lightTile()
-        updateGrid()
 
-        if (lights.every((light) => light.on)) {
-            commands = []
-            updateStatus()
-            return
-        }
+// ======================================================
+// LIMPAR COMANDOS
+// ======================================================
 
-        await new Promise((resolve) => setTimeout(resolve, 400))
-    }
+function clearCommands() {
 
     commands = []
+
     updateStatus()
-    running = false
-    setControlsEnabled(true)
 }
 
-function resetLevel() {
-  robotX = 0
-  robotY = 0
-  direction = "right"
-  commands = []
-  lights = [
-    { x: 2, y: 1, on: false },
-    { x: 4, y: 3, on: false }
-  ]
 
-  updateGrid()
+// ======================================================
+// HABILITAR / DESABILITAR CONTROLES
+// ======================================================
+
+function setControlsEnabled(enabled) {
+
+    const controls =
+        document.querySelectorAll(
+            ".control-buttons button"
+        )
+
+    controls.forEach(button => {
+
+        button.disabled = !enabled
+
+    })
 }
 
-function checkWin() {
-    const allLightsOn = lights.every((light) => light.on)
 
-    if (allLightsOn) {
-        running = false
-        setControlsEnabled(false)
+// ======================================================
+// MOVIMENTO PELO TECLADO
+// ======================================================
 
-        setTimeout(() => {
-            const modal = document.getElementById("win-modal")
-            modal.classList.add("show")
-        }, 300)
+function stepMove(dir) {
 
-        return true
+    if (running || quizActive) {
+        return
     }
 
-    return false
+
+    direction = dir
+
+    moveForward()
+
+    updateGrid()
+
+    checkLightPosition()
 }
 
-function closeWinModal() {
-    const modal = document.getElementById("win-modal")
+
+// ======================================================
+// TECLADO
+// ======================================================
+
+document.addEventListener("keydown", (e) => {
+
+    if (running || quizActive) {
+        return
+    }
+
+
+    if (e.key === "ArrowUp") {
+
+        stepMove("up")
+
+    } else if (e.key === "ArrowDown") {
+
+        stepMove("down")
+
+    } else if (e.key === "ArrowLeft") {
+
+        stepMove("left")
+
+    } else if (e.key === "ArrowRight") {
+
+        stepMove("right")
+
+    }
+
+})
+
+
+// ======================================================
+// MOVIMENTO PARA FRENTE
+// ======================================================
+
+function moveForward() {
+
+    if (
+        direction === "right" &&
+        robotX < gridSize - 1
+    ) {
+
+        robotX++
+
+    } else if (
+        direction === "left" &&
+        robotX > 0
+    ) {
+
+        robotX--
+
+    } else if (
+        direction === "down" &&
+        robotY < gridSize - 1
+    ) {
+
+        robotY++
+
+    } else if (
+        direction === "up" &&
+        robotY > 0
+    ) {
+
+        robotY--
+    }
+}
+
+
+// ======================================================
+// VIRAR DIREITA
+// ======================================================
+
+function turnRight() {
+
+    if (direction === "right") {
+
+        direction = "down"
+
+    } else if (direction === "down") {
+
+        direction = "left"
+
+    } else if (direction === "left") {
+
+        direction = "up"
+
+    } else if (direction === "up") {
+
+        direction = "right"
+    }
+}
+
+
+// ======================================================
+// VIRAR ESQUERDA
+// ======================================================
+
+function turnLeft() {
+
+    if (direction === "right") {
+
+        direction = "up"
+
+    } else if (direction === "up") {
+
+        direction = "left"
+
+    } else if (direction === "left") {
+
+        direction = "down"
+
+    } else if (direction === "down") {
+
+        direction = "right"
+    }
+}
+
+
+// ======================================================
+// VERIFICA SE CHEGOU EM UMA LÂMPADA
+// ======================================================
+
+function checkLightPosition() {
+
+    const light =
+        lights.find(
+            lightItem =>
+                lightItem.x === robotX &&
+                lightItem.y === robotY
+        )
+
+
+    if (!light) {
+        return null
+    }
+
+
+    // Se já respondeu essa lâmpada,
+    // não mostra pergunta novamente.
+
+    if (light.on) {
+        return null
+    }
+
+
+    return light
+}
+
+
+// ======================================================
+// ESCOLHE UMA PERGUNTA ALEATÓRIA
+// ======================================================
+
+function getRandomQuestion(light) {
+
+    let availableQuestions =
+        questionBank.filter(
+            (_, index) =>
+                !light.questionUsed.includes(index)
+        )
+
+
+    // Se todas já foram usadas,
+    // libera o banco novamente.
+
+    if (availableQuestions.length === 0) {
+
+        light.questionUsed = []
+
+        availableQuestions = [...questionBank]
+    }
+
+
+    const randomIndex =
+        Math.floor(
+            Math.random() *
+            availableQuestions.length
+        )
+
+
+    const selected =
+        availableQuestions[randomIndex]
+
+
+    const originalIndex =
+        questionBank.indexOf(selected)
+
+
+    light.questionUsed.push(originalIndex)
+
+
+    return selected
+}
+
+
+// ======================================================
+// ABRE A PERGUNTA
+// ======================================================
+
+function openQuestion(light) {
+
+    quizActive = true
+
+    currentLight = light
+
+    currentQuestion =
+        getRandomQuestion(light)
+
+
+    const modal =
+        document.getElementById("question-modal")
+
+    const questionText =
+        document.getElementById("question-text")
+
+    const optionsContainer =
+        document.getElementById("question-options")
+
+    const feedback =
+        document.getElementById("question-feedback")
+
+
+    questionText.textContent =
+        currentQuestion.question
+
+
+    optionsContainer.innerHTML = ""
+
+    feedback.textContent = ""
+
+    feedback.className =
+        "question-feedback"
+
+
+    currentQuestion.options.forEach(
+        (option, index) => {
+
+            const button =
+                document.createElement("button")
+
+            button.type = "button"
+
+            button.textContent = option
+
+            button.classList.add(
+                "question-option"
+            )
+
+
+            button.onclick = () => {
+
+                answerQuestion(index)
+
+            }
+
+
+            optionsContainer.appendChild(button)
+        }
+    )
+
+
+    modal.classList.add("show")
+}
+
+
+// ======================================================
+// RESPONDE A PERGUNTA
+// ======================================================
+
+function answerQuestion(selectedIndex) {
+
+    if (!currentQuestion) {
+        return
+    }
+
+
+    const feedback =
+        document.getElementById(
+            "question-feedback"
+        )
+
+
+    const buttons =
+        document.querySelectorAll(
+            ".question-option"
+        )
+
+
+    // -----------------------------
+    // RESPOSTA CORRETA
+    // -----------------------------
+
+    if (
+        selectedIndex ===
+        currentQuestion.correct
+    ) {
+
+        feedback.textContent =
+            "✓ Resposta correta!"
+
+        feedback.classList.add("correct")
+
+
+        buttons.forEach(button => {
+
+            button.disabled = true
+
+        })
+
+
+        setTimeout(() => {
+
+            currentLight.on = true
+
+            closeQuestionModal()
+
+            updateGrid()
+
+            checkWin()
+
+        }, 700)
+
+
+        return
+    }
+
+
+    // -----------------------------
+    // RESPOSTA ERRADA
+    // -----------------------------
+
+    feedback.textContent =
+        "✕ Resposta incorreta! Tente outra."
+
+    feedback.classList.add("wrong")
+
+
+    buttons.forEach(button => {
+
+        button.disabled = true
+
+    })
+
+
+    setTimeout(() => {
+
+        openQuestion(currentLight)
+
+    }, 700)
+}
+
+
+// ======================================================
+// FECHA MODAL DA PERGUNTA
+// ======================================================
+
+function closeQuestionModal() {
+
+    const modal =
+        document.getElementById(
+            "question-modal"
+        )
 
     modal.classList.remove("show")
 
+    quizActive = false
+
+    currentQuestion = null
+
+    currentLight = null
+
+
+    if (questionResolver) {
+
+        const resolve =
+            questionResolver
+
+        questionResolver = null
+
+        resolve()
+    }
+}
+
+
+// ======================================================
+// ESPERA O JOGADOR RESPONDER
+// ======================================================
+
+function waitForQuestion(light) {
+
+    return new Promise(resolve => {
+
+        questionResolver = resolve
+
+        openQuestion(light)
+
+    })
+}
+
+
+// ======================================================
+// VERIFICA A LÂMPADA ATUAL
+// ======================================================
+
+async function handleLight() {
+
+    const light = checkLightPosition()
+
+
+    if (!light) {
+        return
+    }
+
+
+    await waitForQuestion(light)
+}
+
+
+// ======================================================
+// EXECUTAR COMANDOS
+// ======================================================
+
+async function runCommands() {
+
+    if (commands.length === 0) {
+
+        alert(
+            "Adicione comandos antes de executar."
+        )
+
+        return
+    }
+
+
+    if (running || quizActive) {
+        return
+    }
+
+
+    running = true
+
+    setControlsEnabled(false)
+
+
+    for (const cmd of commands) {
+
+
+        // -----------------------------
+        // EXECUTA O COMANDO
+        // -----------------------------
+
+        if (cmd === "frente") {
+
+            moveForward()
+
+        } else if (cmd === "direita") {
+
+            turnRight()
+
+        } else if (cmd === "esquerda") {
+
+            turnLeft()
+        }
+
+
+        updateGrid()
+
+
+        // -----------------------------
+        // VERIFICA LÂMPADA
+        // -----------------------------
+
+        const light =
+            checkLightPosition()
+
+
+        if (light) {
+
+            await waitForQuestion(light)
+
+            updateGrid()
+        }
+
+
+        // -----------------------------
+        // VERIFICA VITÓRIA
+        // -----------------------------
+
+        if (
+            lights.every(
+                light => light.on
+            )
+        ) {
+
+            commands = []
+
+            updateStatus()
+
+            running = false
+
+            return
+        }
+
+
+        await new Promise(
+            resolve =>
+                setTimeout(resolve, 400)
+        )
+    }
+
+
+    commands = []
+
+    updateStatus()
+
+    running = false
+
+    setControlsEnabled(true)
+}
+
+
+// ======================================================
+// VERIFICA VITÓRIA
+// ======================================================
+
+function checkWin() {
+
+    const allLightsOn =
+        lights.every(
+            light => light.on
+        )
+
+
+    if (!allLightsOn) {
+
+        return false
+    }
+
+
+    running = false
+
+    setControlsEnabled(false)
+
+
     setTimeout(() => {
+
+        const modal =
+            document.getElementById(
+                "win-modal"
+            )
+
+        modal.classList.add("show")
+
+    }, 300)
+
+
+    return true
+}
+
+
+// ======================================================
+// FECHA MODAL DE VITÓRIA
+// ======================================================
+
+function closeWinModal() {
+
+    const modal =
+        document.getElementById(
+            "win-modal"
+        )
+
+
+    modal.classList.remove("show")
+
+
+    setTimeout(() => {
+
         resetLevel()
+
         setControlsEnabled(true)
+
     }, 250)
 }
+
+
+// ======================================================
+// REINICIAR FASE
+// ======================================================
+
+function resetLevel() {
+
+    robotX = 0
+
+    robotY = 0
+
+    direction = "right"
+
+    commands = []
+
+    running = false
+
+    quizActive = false
+
+    currentQuestion = null
+
+    currentLight = null
+
+    questionResolver = null
+
+
+    lights = [
+
+        {
+            x: 2,
+            y: 1,
+            on: false,
+            questionUsed: []
+        },
+
+        {
+            x: 4,
+            y: 3,
+            on: false,
+            questionUsed: []
+        }
+
+    ]
+
+
+    document
+        .getElementById("question-modal")
+        .classList.remove("show")
+
+
+    document
+        .getElementById("win-modal")
+        .classList.remove("show")
+
+
+    setControlsEnabled(true)
+
+    updateGrid()
+}
+
+
+// ======================================================
+// INICIA O JOGO
+// ======================================================
 
 createGrid()

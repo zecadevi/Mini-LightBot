@@ -335,3 +335,337 @@ button:active {
 .modal button {
     min-width: 120px;
 }
+
+
+/* =========================================
+   LÂMPADAS
+========================================= */
+
+.light-off {
+    background: linear-gradient(
+        180deg,
+        #e2e8f0 0%,
+        #cbd5e1 100%
+    );
+
+    color: #64748b;
+}
+
+.light-on {
+    background: linear-gradient(
+        180deg,
+        #fef9c3 0%,
+        #fde047 100%
+    );
+
+    color: #111827;
+
+    box-shadow:
+        0 0 20px rgba(250, 204, 21, 0.45);
+}
+
+
+/* =========================================
+   LÂMPADA SOBRE O BLOCO
+========================================= */
+
+.lamp {
+    position: absolute;
+
+    font-size: 38px;
+
+    transform:
+        translateZ(35px)
+        translateY(-8px);
+
+    filter:
+        grayscale(0.7)
+        brightness(0.85);
+
+    transition:
+        transform 0.25s ease,
+        filter 0.25s ease;
+
+    pointer-events: none;
+
+    z-index: 2;
+}
+
+
+.lamp-on {
+    transform:
+        translateZ(45px)
+        translateY(-14px)
+        scale(1.12);
+
+    filter:
+        grayscale(0)
+        brightness(1.2)
+        drop-shadow(
+            0 0 10px rgba(250, 204, 21, 0.9)
+        );
+}
+
+
+/* =========================================
+   MODAIS
+========================================= */
+
+.modal-overlay {
+    position: fixed;
+
+    inset: 0;
+
+    background:
+        rgba(15, 23, 42, 0.60);
+
+    display: flex;
+
+    justify-content: center;
+
+    align-items: center;
+
+    padding: 20px;
+
+    z-index: 9999;
+
+    opacity: 0;
+
+    visibility: hidden;
+
+    transition:
+        opacity 0.25s ease,
+        visibility 0.25s ease;
+}
+
+
+.modal-overlay.show {
+    opacity: 1;
+
+    visibility: visible;
+}
+
+
+/* =========================================
+   CAIXA DO MODAL
+========================================= */
+
+.modal {
+    width: min(420px, 100%);
+
+    background: #ffffff;
+
+    border-radius: 24px;
+
+    padding: 32px;
+
+    text-align: center;
+
+    box-shadow:
+        0 25px 70px
+        rgba(15, 23, 42, 0.25);
+
+    transform:
+        translateY(15px)
+        scale(0.96);
+
+    transition:
+        transform 0.25s ease;
+}
+
+
+.modal-overlay.show .modal {
+    transform:
+        translateY(0)
+        scale(1);
+}
+
+
+.modal-icon {
+    font-size: 52px;
+
+    margin-bottom: 10px;
+}
+
+
+.modal h2 {
+    margin: 0;
+
+    font-size: 28px;
+
+    color: #0f172a;
+}
+
+
+.modal p {
+    margin: 10px 0 24px;
+
+    color: #475569;
+
+    line-height: 1.5;
+}
+
+
+/* =========================================
+   MODAL DE PERGUNTA
+========================================= */
+
+.question-modal {
+    text-align: left;
+}
+
+
+.question-modal .modal-icon {
+    text-align: center;
+}
+
+
+.question-difficulty {
+    display: block;
+
+    width: fit-content;
+
+    margin: 0 auto 10px;
+
+    padding: 5px 10px;
+
+    border-radius: 999px;
+
+    background: #eef2ff;
+
+    color: #4338ca;
+
+    font-size: 12px;
+
+    font-weight: 700;
+
+    letter-spacing: 0.03em;
+}
+
+
+.question-modal h2 {
+    text-align: center;
+
+    font-size: 24px;
+
+    margin-bottom: 18px;
+}
+
+
+#question-text {
+    font-size: 17px;
+
+    font-weight: 600;
+
+    color: #1e293b;
+
+    margin-bottom: 20px;
+}
+
+
+/* =========================================
+   ALTERNATIVAS
+========================================= */
+
+.question-options {
+    display: grid;
+
+    gap: 10px;
+}
+
+
+.question-option {
+    width: 100%;
+
+    padding: 14px 16px;
+
+    border-radius: 14px;
+
+    background: #f8fafc;
+
+    color: #1e293b;
+
+    border:
+        1px solid
+        rgba(148, 163, 184, 0.35);
+
+    text-align: left;
+
+    font-weight: 600;
+
+    transition:
+        transform 0.15s ease,
+        background 0.15s ease,
+        border-color 0.15s ease;
+}
+
+
+.question-option:hover {
+    background: #eef2ff;
+
+    border-color: #818cf8;
+
+    transform: translateY(-1px);
+}
+
+
+.question-option:disabled {
+    cursor: default;
+
+    opacity: 0.7;
+
+    transform: none;
+}
+
+
+/* =========================================
+   FEEDBACK DA RESPOSTA
+========================================= */
+
+.question-feedback {
+    min-height: 24px;
+
+    margin-top: 14px;
+
+    text-align: center;
+
+    font-weight: 700;
+
+    font-size: 14px;
+}
+
+
+.question-feedback.correct {
+    color: #16a34a;
+}
+
+
+.question-feedback.wrong {
+    color: #dc2626;
+}
+
+
+/* =========================================
+   BOTÃO DO MODAL
+========================================= */
+
+.modal button {
+    min-width: 120px;
+}
+
+
+/* =========================================
+   ROBÔ
+========================================= */
+
+.robot {
+    border:
+        3px solid
+        #fb923c;
+
+    box-sizing: border-box;
+
+    position: relative;
+
+    z-index: 3;
+}

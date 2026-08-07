@@ -50,19 +50,55 @@
                         <button type="button" onclick="addCommand('direita')">Direita</button>
                         <button type="button" onclick="addCommand('esquerda')">Esquerda</button>
                     </div>
-
                 </div>
             </section>
         </main>
 
-        <div id="win-modal" class="modal-overlay">
-            <div class="modal">
-                <div class="modal-icon">🎉</div>
-                <h2>Parabéns!</h2>
-                <p>Você conseguiu acender todas as luzes!</p>
-                <button type="button" onclick="closeWinModal()">OK</button>
-            </div>
+        <div id="question-modal" class="modal-overlay">
+
+        <div class="modal question-modal">
+
+            <div class="modal-icon">💡</div>
+
+            <span id="question-difficulty" class="question-difficulty">
+                TI • Médio
+            </span>
+
+            <h2 id="question-title">
+                Pergunta de TI
+            </h2>
+
+            <p id="question-text"></p>
+
+            <div id="question-options" class="question-options"></div>
+
+            <div id="question-feedback" class="question-feedback"></div>
+
         </div>
+
+    </div>
+
+
+    <!-- MODAL DE VITÓRIA -->
+    <div id="win-modal" class="modal-overlay">
+
+        <div class="modal">
+
+            <div class="modal-icon">🎉</div>
+
+            <h2>Parabéns!</h2>
+
+            <p>
+                Você conseguiu acender todas as luzes!
+            </p>
+
+            <button
+                type="button"
+                onclick="closeWinModal()">
+                OK
+            </button>
+        </div>
+    </div>
 
         <script src="script.js"></script>
 
