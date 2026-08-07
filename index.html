@@ -1,23 +1,66 @@
  <!DOCTYPE html>
 <html>
-<head>
-  <title>Mini Lightbot</title>
-  <link rel="stylesheet" href="/style.css">
-</head>
-<body>
+    <head>
+        <title>Mini Lightbot</title>
+        <link rel="stylesheet" href="style.css">
+    </head>
+    <body>
 
-<h1>Mini Lightbot</h1>
+        <header class="app-header">
+            <div>
+                <h1>Mini Lightbot</h1>
+            </div>
+        </header>
 
-<div id="grid"></div>
+        <main class="layout">
+            <section class="panel board-panel">
+                <div class="panel-header">
+                    <span class="panel-title">Tabuleiro</span>
+                    <div class="status">
+                        <span id="direction">Direção: →</span>
+                        <span id="position">Posição: 0,0</span>
+                    </div>
+                </div>
+                <div class="grid-view">
+                    <div id="grid"></div>
+                </div>
+            </section>
 
-<div id="controls">
-  <button onclick="addCommand('frente')">Frente</button>
-  <button onclick="addCommand('direita')">Direita</button>
-  <button onclick="addCommand('esquerda')">Esquerda</button>
-  <button onclick="runCommands()">Executar</button>
-</div>
+            <section class="panel controls-panel">
+                <div class="panel-header">
+                    <span class="panel-title">Comandos</span>
+                </div>
 
-<script src="/script.js"></script>
+                <div id="controls" class="control-buttons"> 
+                    <div class="action-move">
+                        <button type="button" onclick="runCommands()">Executar</button>
+                        <button type="button" onclick="resetLevel()">Reiniciar</button>
+                    </div>
+                </div>
 
-</body>
+                <div id="command-list" class="command-card compact">
+                    <div class="compact-row">
+                        <span id="command-count">Comandos: 0</span>
+                        <div class="compact-actions">
+                            <button class="small" id="toggle-editor" onclick="toggleCommandEditor()">Editar</button>
+                            <button class="small" onclick="clearCommands()" title="Limpar">Limpar</button>
+                        </div>
+                    </div>
+                    <div id="command-preview" class="preview"></div>
+                </div>
+            
+                <div id="controls" class="control-buttons">
+                    <div class="add-move">
+                        <button type="button" onclick="addCommand('frente')">Frente</button>
+                        <button type="button" onclick="addCommand('direita')">Direita</button>
+                        <button type="button" onclick="addCommand('esquerda')">Esquerda</button>
+                    </div>
+
+                </div>
+            </section>
+        </main>
+
+        <script src="script.js"></script>
+
+    </body>
 </html>
