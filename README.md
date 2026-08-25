@@ -1,7 +1,12 @@
 ## Coisas para fazer
 
 - Perguntas:
-- - Finalizar os níveis de dificuldade (*Médio* (5 lâmpadas) e *Difícil* (10 lâmpadas))
+
+- - reorganizando os niveis para ficar mais profissional.
+
+- - colocando  modo de liberaçao no jogo; só liberar o nivel  quando passar de fase
+
+- - Finalizar os níveis de dificuldade ((5 lâmpadas) e *Difícil(10lâmpadas))
 
 - Implementar os níveis (1....10)
 
