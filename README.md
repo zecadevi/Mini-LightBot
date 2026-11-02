@@ -1,15 +1,13 @@
 ## Coisas para fazer
 
-- Perguntas:
+- IDEIAS:
 
-- - reorganizando os niveis para ficar mais profissional.
+- - Terminando de ajeitar a tela inicial do jogo 
 
-- - colocando  modo de liberaçao no jogo; só liberar o nivel  quando passar de fase
+- - melhorar animaçao do jogo 
 
-- - Finalizar os níveis de dificuldade ((5 lâmpadas) e *Difícil(10lâmpadas))
+- - Melhorar nivel de dificuldade no jogo
 
-- Implementar os níveis (1....10)
+- - Implementar os níveis (1....10)
 
-- Personagem (desenhar e aplicar na interface)
-
-- Ver a possibilidade de colocar muros no tabuleiro para dificultar os movimentos do personagem
+- - Personagem (desenhar e aplicar na interface)

@@ -1,27 +1,289 @@
 <!DOCTYPE html>
-<html>
+<html lang="pt-BR">
     <head>
         <title>Mini Lightbot</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="theme-color" content="#090d21">
+        <meta name="description" content="Um jogo de lógica e robótica: programe o Mini LightBot para acender todas as lâmpadas.">
         <link rel="stylesheet" href="style.css">
     </head>
     <body>
 
-        <section id="start-screen" class="start-screen"> 
-            <div class="start-card"> 
-                
-                <h1>MINI LIGHTBOT</h1> 
-                <p class="start-description"> Escolha um nível para começar sua aventura! </p> 
-                <div class="level-options"> 
-                    <button type="button" class="level-card easy" onclick="startGame('facil')" > 
-                        <span class="level-icon">🟢</span> 
-                        <span class="level-content"> <strong>★Easy</strong> 
-                        </span> </button> <button type="button" class="level-card medium" onclick="startGame('medio')" > 
-                        <span class="level-icon">🟡</span> <span class="level-content"> 
-                            <strong>★★Mediun</strong> 
-                        </span> </button> <button type="button" class="level-card hard" onclick="startGame('dificil')" > 
-                        <span class="level-icon">🔴</span> <span class="level-content"> 
-                            <strong>★★★Profissional</strong> 
-                        </span> </button> </div> </div> </section>
+        <section id="start-screen" class="start-screen">
+            <div class="start-stars" aria-hidden="true">
+                <span class="star star-one">✦</span>
+                <span class="star star-two">✧</span>
+                <span class="star star-three">✦</span>
+                <span class="star star-four">·</span>
+                <span class="star star-five">·</span>
+                <span class="star star-six">✧</span>
+                <span class="star star-seven">·</span>
+                <span class="star star-eight">✦</span>
+            </div>
+            <svg class="world-backdrop" viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <defs>
+                    <linearGradient id="world-rock-left" x1="0" y1="0" x2="0.7" y2="1">
+                        <stop stop-color="#5328B0" />
+                        <stop offset="1" stop-color="#21175B" />
+                    </linearGradient>
+                    <linearGradient id="world-rock-right" x1="0" y1="0" x2="1" y2="1">
+                        <stop stop-color="#382087" />
+                        <stop offset="1" stop-color="#17164E" />
+                    </linearGradient>
+                    <linearGradient id="world-rail" x1="0" y1="0" x2="1" y2="0">
+                        <stop stop-color="#FB8E69" />
+                        <stop offset=".5" stop-color="#83F6F6" />
+                        <stop offset="1" stop-color="#9A73FF" />
+                    </linearGradient>
+                </defs>
+                <path d="M0 205 190 201l48 43 74 14 52 94-44 52 40 72-50 41 43 70-34 313H0Z" fill="url(#world-rock-left)" />
+                <path d="m0 219 210 2 42 49 78 8-17 47-82-4-46-45L0 278Zm0 205 180-25 42 44 94 12-24 44-111-13-39-41L0 463Zm0 174 139-30 42 36 128 17-31 43-135-17-42-34L0 685Z" fill="#7840D0" opacity=".45" />
+                <path d="m1440 192-203 10-50 40-86 7-52 85 45 59-31 80 52 45-39 70 46 312h368Z" fill="url(#world-rock-right)" />
+                <path d="m1440 224-215-5-43 42-80 4 16 45 86-1 44-39 192-3Zm0 202-184-29-44 38-97 12 23 43 112-13 42-38 148 19Zm0 176-145-27-44 35-128 13 30 45 137-13 45-37 105 20Z" fill="#6236BC" opacity=".44" />
+                <path d="M0 610h253l70 30h175m942-92h-230l-67 34h-187" fill="none" stroke="url(#world-rail)" stroke-opacity=".48" stroke-width="5" />
+                <path d="M0 706h302m1138-143h-182" fill="none" stroke="#9380FF" stroke-opacity=".35" stroke-width="3" />
+                <circle cx="319" cy="640" r="7" fill="#6AF4F1" />
+                <circle cx="1115" cy="582" r="7" fill="#FFB766" />
+            </svg>
+            <div class="start-card">
+                <div class="start-copy">
+                    <p class="eyebrow">Jogo de lógica <span aria-hidden="true">•</span> Robótica</p>
+                    <h1 class="game-logo"><span class="logo-mini">MINI</span><span class="logo-main">LIGHTBOT</span></h1>
+                    <p class="start-description">Ajude o robô a acender todas as lâmpadas!</p>
+                    <button id="start-button" type="button" class="primary-button" aria-label="Começar e escolher um nível">
+                        <span>COMEÇAR</span>
+                    </button>
+                    <p class="menu-caption"><span class="status-light" aria-hidden="true"></span> Uma aventura de lógica começa aqui</p>
+                </div>
+                <div class="start-illustration" role="img" aria-label="Robô Mini LightBot flutuando em uma plataforma futurista, ao lado de uma lâmpada acesa">
+                    <div class="stage-halo" aria-hidden="true"></div>
+                    <div class="stage-grid" aria-hidden="true"></div>
+                    <span class="scene-particle particle-one" aria-hidden="true"></span>
+                    <span class="scene-particle particle-two" aria-hidden="true"></span>
+                    <span class="scene-particle particle-three" aria-hidden="true"></span>
+                    <span class="scene-particle particle-four" aria-hidden="true"></span>
+                    <svg class="stage-structures" viewBox="0 0 500 360" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                        <defs>
+                            <linearGradient id="tower-shell" x1="0" y1="0" x2="1" y2="1">
+                                <stop stop-color="#263E77" stop-opacity=".88" />
+                                <stop offset="1" stop-color="#111C41" stop-opacity=".96" />
+                            </linearGradient>
+                            <linearGradient id="tower-light" x1="0" y1="0" x2="0" y2="1">
+                                <stop stop-color="#85F5FF" />
+                                <stop offset="1" stop-color="#4A91F5" stop-opacity=".15" />
+                            </linearGradient>
+                        </defs>
+                        <path d="M40 262V159l25-20 24 20v103m-65 0h80" fill="url(#tower-shell)" stroke="#6487C1" stroke-opacity=".6" stroke-width="2" />
+                        <path d="M48 157v-23h34v23m-22-23v-15h10v15" fill="#17274E" stroke="#6C94D6" stroke-width="2" />
+                        <path d="M57 174v16m16-16v16m-16 15v16m16-16v16" stroke="url(#tower-light)" stroke-width="4" stroke-linecap="round" />
+                        <path d="M386 260V124l28-24 29 24v136m-71 0h104" fill="url(#tower-shell)" stroke="#7769C7" stroke-opacity=".67" stroke-width="2" />
+                        <path d="M398 123V96h34v27m-23-27V80h12v16" fill="#1D2453" stroke="#9483E0" stroke-width="2" />
+                        <path d="M404 143v18m19-18v18m-19 17v18m19-18v18m-19 17v18m19-18v18" stroke="url(#tower-light)" stroke-width="4" stroke-linecap="round" />
+                        <path d="M12 269h77l19-14h38m341 14h-70l-20-16h-38" fill="none" stroke="#68B9EE" stroke-opacity=".48" stroke-width="2" />
+                        <circle cx="107" cy="255" r="4" fill="#80F5EF" />
+                        <circle cx="417" cy="253" r="4" fill="#FFC66F" />
+                    </svg>
+                    <div class="robot-float">
+                    <svg class="hero-robot" viewBox="0 0 260 300" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                        <defs>
+                            <linearGradient id="bot-shell" x1="46" y1="55" x2="210" y2="245" gradientUnits="userSpaceOnUse">
+                                <stop stop-color="#FFF1B0" />
+                                <stop offset=".28" stop-color="#FFB94F" />
+                                <stop offset=".66" stop-color="#EB822B" />
+                                <stop offset="1" stop-color="#874426" />
+                            </linearGradient>
+                            <linearGradient id="bot-armor" x1="70" y1="150" x2="190" y2="245" gradientUnits="userSpaceOnUse">
+                                <stop stop-color="#F9B447" />
+                                <stop offset=".48" stop-color="#D87926" />
+                                <stop offset="1" stop-color="#6C392D" />
+                            </linearGradient>
+                            <linearGradient id="bot-face" x1="68" y1="62" x2="195" y2="150" gradientUnits="userSpaceOnUse">
+                                <stop stop-color="#08172E" />
+                                <stop offset=".52" stop-color="#142B54" />
+                                <stop offset="1" stop-color="#302B67" />
+                            </linearGradient>
+                            <linearGradient id="bot-chest" x1="100" y1="179" x2="164" y2="227" gradientUnits="userSpaceOnUse">
+                                <stop stop-color="#FFF0A2" />
+                                <stop offset=".38" stop-color="#75FFF0" />
+                                <stop offset="1" stop-color="#428AFF" />
+                            </linearGradient>
+                            <linearGradient id="bot-gold" x1="0" y1="0" x2="1" y2="1">
+                                <stop stop-color="#FFF0AD" />
+                                <stop offset="1" stop-color="#F39C54" />
+                            </linearGradient>
+                            <filter id="eye-glow" x="-100%" y="-100%" width="300%" height="300%">
+                                <feGaussianBlur stdDeviation="4" result="blur" />
+                                <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+                            </filter>
+                            <filter id="core-glow" x="-100%" y="-100%" width="300%" height="300%">
+                                <feGaussianBlur stdDeviation="6" result="blur" />
+                                <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+                            </filter>
+                        </defs>
+                        <ellipse cx="130" cy="276" rx="71" ry="12" fill="#34B7FF" opacity=".2" />
+                        <path d="m97 224-3 31c-1 10 5 18 15 19l16 2 4-53m26 1 4 31c1 10-5 18-15 19l-16 2-4-53" fill="url(#bot-armor)" stroke="#BCD9FF" stroke-width="4" />
+                        <path d="m100 247 21 2m19 1 21-2" stroke="#809FD5" stroke-width="4" stroke-linecap="round" />
+                        <path d="M94 264h34v10c0 7-6 12-13 12H99c-8 0-14-5-14-12 0-5 4-9 9-10Zm38 0h34c5 1 9 5 9 10 0 7-6 12-14 12h-16c-7 0-13-5-13-12v-10Z" fill="url(#bot-shell)" stroke="#E4F1FF" stroke-width="3" />
+                        <path d="m95 276 23 1m27-1 20-1" stroke="#59E8EE" stroke-width="4" stroke-linecap="round" />
+                        <rect x="105" y="140" width="50" height="27" rx="12" fill="#293E6A" stroke="#91B5EB" stroke-width="3" />
+                        <path d="M70 165c-11-4-22 2-26 13l-17 43c-3 9 1 17 9 20 8 3 16-1 20-9l21-41m113-26c11-4 22 2 26 13l17 43c3 9-1 17-9 20-8 3-16-1-20-9l-21-41" fill="none" stroke="#192D55" stroke-width="22" stroke-linecap="round" />
+                        <g class="robot-arm robot-arm-left">
+                            <path d="M70 165c-11-4-22 2-26 13l-17 43c-3 9 1 17 9 20 8 3 16-1 20-9l21-41" fill="url(#bot-shell)" stroke="#D8EAFF" stroke-width="3" />
+                            <circle cx="42" cy="222" r="10" fill="#344D7D" stroke="#A9C8F3" stroke-width="3" />
+                            <path d="M30 240c-6 2-9 8-7 14l3 7c2 5 8 7 12 4l8-5 7 4c5 3 11 0 12-5l2-9c1-5-3-10-8-11l-11-3-8 7-9-3Z" fill="url(#bot-shell)" stroke="#E3F1FF" stroke-width="3" />
+                            <path d="m31 251-2 6m14-3-1 7m14-8 1 6" stroke="#7998C8" stroke-width="2.5" stroke-linecap="round" />
+                        </g>
+                        <g class="robot-arm robot-arm-right">
+                            <path d="M190 165c11-4 22 2 26 13l17 43c3 9-1 17-9 20-8 3-16-1-20-9l-21-41" fill="url(#bot-shell)" stroke="#D8EAFF" stroke-width="3" />
+                            <circle cx="218" cy="222" r="10" fill="#344D7D" stroke="#A9C8F3" stroke-width="3" />
+                            <path d="M230 240c6 2 9 8 7 14l-3 7c-2 5-8 7-12 4l-8-5-7 4c-5 3-11 0-12-5l-2-9c-1-5 3-10 8-11l11-3 8 7 9-3Z" fill="url(#bot-shell)" stroke="#E3F1FF" stroke-width="3" />
+                            <path d="m229 251 2 6m-14-3 1 7m-14-8-1 6" stroke="#7998C8" stroke-width="2.5" stroke-linecap="round" />
+                        </g>
+                        <path d="M75 157c0-10 8-18 18-18h74c10 0 18 8 18 18v75c0 13-10 23-23 23H98c-13 0-23-10-23-23v-75Z" fill="url(#bot-armor)" stroke="#BCD8FF" stroke-width="4" />
+                        <path d="M91 150h78" stroke="#F4FAFF" stroke-opacity=".55" stroke-width="4" stroke-linecap="round" />
+                        <path d="m80 173 12-9m88 9-12-9" stroke="#FFBE70" stroke-width="5" stroke-linecap="round" />
+                        <path d="M101 175h58c7 0 12 5 12 12v24c0 8-6 14-14 14h-54c-8 0-14-6-14-14v-24c0-7 5-12 12-12Z" fill="#101D3D" stroke="#8CAEE0" stroke-width="3" />
+                        <path d="M105 182h50c4 0 7 3 7 7v16c0 6-4 10-10 10h-44c-6 0-10-4-10-10v-16c0-4 3-7 7-7Z" fill="#07162D" />
+                        <circle class="robot-core" cx="130" cy="197" r="13" fill="url(#bot-chest)" filter="url(#core-glow)" />
+                        <path d="M110 197h-6m58 0h-6" stroke="#7CF6EE" stroke-width="3" stroke-linecap="round" />
+                        <path d="M92 232h12m52 0h12" stroke="#61D6ED" stroke-width="4" stroke-linecap="round" />
+                        <circle cx="83" cy="196" r="4" fill="#82F4EF" />
+                        <circle cx="177" cy="196" r="4" fill="#82F4EF" />
+                        <path d="M95 67V48m70 19V48" stroke="#6C8DBB" stroke-width="10" stroke-linecap="round" />
+                        <path d="M95 59V47m70 12V47" stroke="#D1E5FF" stroke-width="4" stroke-linecap="round" />
+                        <circle class="robot-antenna-light" cx="95" cy="39" r="9" fill="#8DF6E7" filter="url(#eye-glow)" />
+                        <circle class="robot-antenna-light antenna-light-right" cx="165" cy="39" r="7" fill="#FFC36E" filter="url(#eye-glow)" />
+                        <path d="M57 100c0-26 21-47 47-47h52c26 0 47 21 47 47v38c0 16-13 29-29 29H86c-16 0-29-13-29-29v-38Z" fill="url(#bot-shell)" stroke="#E5F2FF" stroke-width="4" />
+                        <path d="M72 78c10-11 22-16 36-17" stroke="#FFFFFF" stroke-opacity=".85" stroke-width="5" stroke-linecap="round" />
+                        <path d="M69 116c0-15 12-27 27-27h68c15 0 27 12 27 27v20c0 12-10 22-22 22H91c-12 0-22-10-22-22v-20Z" fill="url(#bot-face)" stroke="#668BC2" stroke-width="3" />
+                        <path d="M82 99h96" stroke="#A8C7F2" stroke-opacity=".24" stroke-width="3" stroke-linecap="round" />
+                        <rect x="89" y="109" width="26" height="25" rx="11" fill="#243C69" />
+                        <rect x="145" y="109" width="26" height="25" rx="11" fill="#243C69" />
+                        <ellipse class="robot-eye robot-eye-left" cx="102" cy="121" rx="6" ry="8" fill="#91FFF2" filter="url(#eye-glow)" />
+                        <ellipse class="robot-eye robot-eye-right" cx="158" cy="121" rx="6" ry="8" fill="#91FFF2" filter="url(#eye-glow)" />
+                        <path d="M116 143c8 7 20 7 28 0" fill="none" stroke="#B8D9FF" stroke-width="3" stroke-linecap="round" />
+                        <circle cx="75" cy="142" r="4" fill="url(#bot-gold)" />
+                        <circle cx="185" cy="142" r="4" fill="url(#bot-gold)" />
+                        <circle cx="64" cy="91" r="4" fill="#75EEE7" />
+                        <circle cx="196" cy="91" r="4" fill="#75EEE7" />
+                        <path d="M64 182h-8m144 0h8" stroke="#8CAEE0" stroke-width="3" stroke-linecap="round" />
+                        <circle cx="56" cy="182" r="4" fill="url(#bot-gold)" />
+                        <circle cx="204" cy="182" r="4" fill="url(#bot-gold)" />
+                    </svg>
+                    </div>
+                    <span class="lamp-orbit" aria-hidden="true">
+                        <svg viewBox="0 0 32 40" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M16 3a11 11 0 0 0-7 19.5c1.6 1.4 2.5 3 2.7 4.5h8.6c.2-1.5 1.1-3.1 2.7-4.5A11 11 0 0 0 16 3Z" fill="#FFE995" stroke="#FFF4C6" stroke-width="2" />
+                            <path d="M12 31h8M13.5 35h5" stroke="#B9D3FF" stroke-width="2.5" stroke-linecap="round" />
+                            <path d="M16 0v-2M3 8 1 7M29 8l2-1" stroke="#FFF1A8" stroke-width="2" stroke-linecap="round" />
+                        </svg>
+                    </span>
+                    <svg class="stage-platform" viewBox="0 0 420 120" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                        <defs>
+                            <linearGradient id="platform-top" x1="0" y1="0" x2="1" y2="1">
+                                <stop stop-color="#263C78" />
+                                <stop offset=".52" stop-color="#182B5B" />
+                                <stop offset="1" stop-color="#101C43" />
+                            </linearGradient>
+                            <linearGradient id="platform-edge" x1="0" y1="0" x2="1" y2="0">
+                                <stop stop-color="#2D5EAF" />
+                                <stop offset=".5" stop-color="#68DFF4" />
+                                <stop offset="1" stop-color="#6F64D8" />
+                            </linearGradient>
+                        </defs>
+                        <ellipse cx="210" cy="57" rx="178" ry="42" fill="#111638" stroke="#6854C6" stroke-opacity=".8" stroke-width="3" />
+                        <path d="M32 57v17c0 22 80 40 178 40s178-18 178-40V57c0 22-80 40-178 40S32 79 32 57Z" fill="#171A44" stroke="#443B91" stroke-width="2" />
+                        <ellipse cx="210" cy="57" rx="166" ry="34" fill="url(#platform-top)" stroke="url(#platform-edge)" stroke-width="4" />
+                        <ellipse cx="210" cy="54" rx="126" ry="25" fill="#181B46" stroke="#41D9EE" stroke-opacity=".72" stroke-width="3" />
+                        <ellipse cx="210" cy="52" rx="91" ry="18" fill="#32245C" stroke="#FFAE64" stroke-width="5" />
+                        <ellipse cx="210" cy="51" rx="69" ry="12" fill="#13183D" stroke="#FFE29A" stroke-opacity=".9" stroke-width="3" />
+                        <ellipse cx="210" cy="51" rx="48" ry="7" fill="none" stroke="#62E7F2" stroke-opacity=".72" stroke-width="2" stroke-dasharray="5 5" />
+                        <path d="M56 69h34m240 0h-34M79 82h30m202 0h-30" stroke="#5DEBEB" stroke-width="4" stroke-linecap="round" />
+                        <circle cx="66" cy="56" r="5" fill="#82F7F1" />
+                        <circle cx="354" cy="56" r="5" fill="#FFD17A" />
+                        <circle cx="109" cy="83" r="4" fill="#FF9C6A" />
+                        <circle cx="311" cy="83" r="4" fill="#9B8CFF" />
+                    </svg>
+                </div>
+            </div>
+        </section>
+
+        <button id="menu-audio-toggle" class="menu-audio-toggle" type="button" aria-label="Silenciar música" aria-pressed="true" title="Música">
+            <svg class="audio-icon" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M4 10v4h4l5 4V6l-5 4H4Z" />
+                <path class="audio-waves" d="M16 9a5 5 0 0 1 0 6m3-9a9 9 0 0 1 0 12" />
+                <path class="audio-muted" d="m16 9 5 6m0-6-5 6" />
+            </svg>
+            <span class="audio-label">Som ativado</span>
+        </button>
+
+        <section id="level-screen" class="level-screen hidden">
+            <div class="level-stars" aria-hidden="true">
+                <i>✦</i><i>·</i><i>✧</i><i>·</i><i>✦</i><i>·</i><i>✧</i>
+            </div>
+            <div class="level-circuit level-circuit-left" aria-hidden="true"></div>
+            <div class="level-circuit level-circuit-right" aria-hidden="true"></div>
+
+            <button id="level-back-button" class="level-back-button" type="button" aria-label="Voltar à tela inicial">
+                <span aria-hidden="true">←</span> VOLTAR
+            </button>
+
+            <div class="level-selection-shell">
+                <header class="level-heading">
+                    <p class="eyebrow"><span class="status-light" aria-hidden="true"></span> CENTRAL DE MISSÕES</p>
+                    <h2>ESCOLHA SEU <span>NÍVEL</span></h2>
+                    <p>Prepare seu LightBot para a próxima aventura.</p>
+                </header>
+
+                <div class="level-options">
+                    <button type="button" class="level-card easy" data-level="facil" aria-label="Nível Fácil, 2 lâmpadas, questões fáceis">
+                        <span class="level-card-head"><span class="level-number">01</span><span class="level-difficulty">INICIANTE</span></span>
+                        <span class="level-card-title">FÁCIL</span>
+                        <span class="level-card-count">02 <small>LÂMPADAS</small></span>
+                        <span class="level-card-description">QUESTÕES FÁCEIS</span>
+                        <span class="level-lock" aria-hidden="true">
+                            <svg viewBox="0 0 24 24"><path d="M7 10V7a5 5 0 0 1 10 0v3m-11 0h12a2 2 0 0 1 2 2v8H4v-8a2 2 0 0 1 2-2Zm6 4v3" /></svg>
+                            <small>Complete Fácil</small>
+                        </span>
+                        <span class="level-card-sheen" aria-hidden="true"></span>
+                    </button>
+
+                    <button type="button" class="level-card medium" data-level="medio" aria-label="Nível Médio, 5 lâmpadas, questões intermediárias">
+                        <span class="level-card-head"><span class="level-number">02</span><span class="level-difficulty">INTERMEDIÁRIO</span></span>
+                        <span class="level-card-title">MÉDIO</span>
+                        <span class="level-card-count">05 <small>LÂMPADAS</small></span>
+                        <span class="level-card-description">QUESTÕES INTERMEDIÁRIAS</span>
+                        <span class="level-lock" aria-hidden="true">
+                            <svg viewBox="0 0 24 24"><path d="M7 10V7a5 5 0 0 1 10 0v3m-11 0h12a2 2 0 0 1 2 2v8H4v-8a2 2 0 0 1 2-2Zm6 4v3" /></svg>
+                            <small>Complete Médio</small>
+                        </span>
+                        <span class="level-card-sheen" aria-hidden="true"></span>
+                    </button>
+
+                    <button type="button" class="level-card hard" data-level="dificil" aria-label="Nível Difícil, 11 lâmpadas, questões difíceis">
+                        <span class="level-card-head"><span class="level-number">03</span><span class="level-difficulty">AVANÇADO</span></span>
+                        <span class="level-card-title">DIFÍCIL</span>
+                        <span class="level-card-count">11 <small>LÂMPADAS</small></span>
+                        <span class="level-card-description">QUESTÕES DIFÍCEIS</span>
+                        <span class="level-lock" aria-hidden="true">
+                            <svg viewBox="0 0 24 24"><path d="M7 10V7a5 5 0 0 1 10 0v3m-11 0h12a2 2 0 0 1 2 2v8H4v-8a2 2 0 0 1 2-2Zm6 4v3" /></svg>
+                            <small>Complete Médio</small>
+                        </span>
+                        <span class="level-card-sheen" aria-hidden="true"></span>
+                    </button>
+                </div>
+
+                <div class="level-scene" aria-hidden="true">
+                    <span class="level-scene-glow"></span>
+                    <span class="level-particle level-particle-one"></span>
+                    <span class="level-particle level-particle-two"></span>
+                    <span class="level-particle level-particle-three"></span>
+                    <div id="level-robot" class="level-robot"></div>
+                    <div class="level-platform"><i></i><b></b><span></span></div>
+                </div>
+            </div>
+        </section>
 
         <div id="game-screen" class="game-screen hidden">
             <header class="app-header">

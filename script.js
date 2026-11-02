@@ -15,17 +15,310 @@ const levelSettings = {
     }
 }
 
+let menuSoundContext = null
+let menuSoundGain = null
+let menuSoundOscillators = []
+let menuSoundInterval = null
+let menuAudioEnabled = true
+let currentMusicStage = "menu"
+let musicRequestId = 0
+const levelProgressKey = "mini-lightbot-unlocked-levels"
+const levelSequence = ["facil", "medio", "dificil"]
+let completedLevels = readCompletedLevels()
+
+function readCompletedLevels() {
+    try {
+        const saved = JSON.parse(localStorage.getItem(levelProgressKey) || "[]")
+        return Array.isArray(saved) ? saved.filter(level => levelSequence.includes(level)) : []
+    } catch (_) {
+        return []
+    }
+}
+
+function isLevelUnlocked(level) {
+    const index = levelSequence.indexOf(level)
+    return index <= 0 || completedLevels.includes(levelSequence[index - 1])
+}
+
+function renderLevelSelection() {
+    const cards = document.querySelectorAll("#level-screen .level-card")
+
+    cards.forEach(card => {
+        const level = card.dataset.level
+        const unlocked = isLevelUnlocked(level)
+        const lock = card.querySelector(".level-lock")
+
+        card.disabled = !unlocked
+        card.setAttribute("aria-disabled", String(!unlocked))
+        card.classList.toggle("is-locked", !unlocked)
+        if (lock) lock.hidden = unlocked
+    })
+}
+
+function mountSelectionRobot() {
+    const source = document.querySelector("#start-screen .hero-robot")
+    const mount = document.getElementById("level-robot")
+    if (!source || !mount || mount.childElementCount) return
+
+    const robot = source.cloneNode(true)
+    robot.classList.add("level-hero-robot")
+    robot.setAttribute("focusable", "false")
+    mount.appendChild(robot)
+}
+
+function recordLevelCompletion(level) {
+    if (!levelSequence.includes(level) || completedLevels.includes(level)) return
+
+    completedLevels.push(level)
+
+    try {
+        localStorage.setItem(levelProgressKey, JSON.stringify(completedLevels))
+    } catch (_) {
+        // A sessão ainda desbloqueia níveis se o armazenamento estiver indisponível.
+    }
+
+    renderLevelSelection()
+    const newlyUnlocked = levelSequence[levelSequence.indexOf(level) + 1]
+    const card = document.querySelector(`#level-screen .level-card[data-level="${newlyUnlocked}"]`)
+    if (card) {
+        card.classList.remove("level-unlock")
+        requestAnimationFrame(() => card.classList.add("level-unlock"))
+    }
+}
+
+function stopMenuSound() {
+    musicRequestId += 1
+    const context = menuSoundContext
+
+    if (!context) return
+
+    const gain = menuSoundGain
+    const oscillators = menuSoundOscillators
+    const now = context.currentTime
+
+    if (menuSoundInterval !== null) {
+        window.clearInterval(menuSoundInterval)
+        menuSoundInterval = null
+    }
+
+    if (gain) {
+        gain.gain.cancelScheduledValues(now)
+        gain.gain.setTargetAtTime(0, now, 0.18)
+    }
+
+    menuSoundContext = null
+    menuSoundGain = null
+    menuSoundOscillators = []
+
+    window.setTimeout(() => {
+        oscillators.forEach(oscillator => {
+            try {
+                oscillator.stop()
+            } catch (_) {
+                // O oscilador pode já ter sido encerrado pelo navegador.
+            }
+        })
+
+        context.close().catch(() => {})
+    }, 900)
+}
+
+async function startStageMusic(stage = currentMusicStage) {
+    stopMenuSound()
+    const requestId = musicRequestId
+    const AudioContext = window.AudioContext || window.webkitAudioContext
+
+    if (!AudioContext) return false
+
+    try {
+        const context = new AudioContext()
+        const masterGain = context.createGain()
+        const trackSettings = {
+            menu: { bass: [48, 43, 45, 41], interval: 360, wave: "triangle", seed: 42891 },
+            levels: { bass: [50, 45, 46, 43], interval: 410, wave: "sine", seed: 72031 },
+            "game-facil": { bass: [48, 55, 53, 43], interval: 330, wave: "triangle", seed: 39107 },
+            "game-medio": { bass: [50, 46, 43, 48], interval: 300, wave: "triangle", seed: 62119 },
+            "game-dificil": { bass: [43, 46, 41, 48], interval: 270, wave: "sawtooth", seed: 93187 }
+        }
+        const settings = trackSettings[stage] || trackSettings.menu
+        const motifs = [
+            [0, 2, 4, 2, 1, 3, 4, 3, 0, 2, 5, 4, 3, 2, 1, 0],
+            [2, 4, 5, 4, 3, 4, 6, 4, 2, 4, 7, 6, 4, 3, 2, 1],
+            [4, 5, 7, 5, 4, 3, 2, 4, 5, 7, 6, 4, 3, 2, 0, 2],
+            [0, 1, 3, 4, 3, 1, 0, 2, 3, 5, 4, 3, 1, 2, 0, 0]
+        ]
+        const scale = stage === "levels" ? [0, 2, 3, 7, 9, 10, 12, 14] : [0, 2, 4, 7, 9, 12, 14, 16]
+        const bass = settings.bass
+        let seed = settings.seed
+        let step = 0
+        const melody = Array.from({ length: 1024 }, (_, index) => {
+            const phrase = Math.floor(index / 16)
+            const phraseStep = index % 16
+            seed = (seed * 16807) % 2147483647
+            const phraseMotif = (phrase + Math.floor(phrase / 4) + seed % motifs.length) % motifs.length
+            const chordRoot = bass[Math.floor(phrase / 4) % bass.length] + 24
+            const note = chordRoot + scale[motifs[phraseMotif][phraseStep]]
+
+            return phraseStep === 15 && seed % 5 === 0 ? null : note
+        })
+
+        masterGain.gain.setValueAtTime(0, context.currentTime)
+        masterGain.connect(context.destination)
+
+        menuSoundContext = context
+        menuSoundGain = masterGain
+        menuSoundOscillators = []
+
+        const playTone = (frequency, type, volume, duration, now) => {
+            const oscillator = context.createOscillator()
+            const envelope = context.createGain()
+
+            oscillator.type = type
+            oscillator.frequency.setValueAtTime(frequency, now)
+            envelope.gain.setValueAtTime(0.0001, now)
+            envelope.gain.linearRampToValueAtTime(volume, now + 0.02)
+            envelope.gain.exponentialRampToValueAtTime(0.0001, now + duration)
+            oscillator.connect(envelope)
+            envelope.connect(masterGain)
+            oscillator.addEventListener("ended", () => {
+                menuSoundOscillators = menuSoundOscillators.filter(activeNote => activeNote !== oscillator)
+            }, { once: true })
+            oscillator.start(now)
+            oscillator.stop(now + duration + 0.03)
+            menuSoundOscillators.push(oscillator)
+        }
+
+        const playMusicStep = () => {
+            if (menuSoundContext !== context || !menuAudioEnabled) return
+
+            const now = context.currentTime
+
+            const melodyNote = melody[step % melody.length]
+            if (melodyNote !== null) {
+                const frequency = 440 * (2 ** ((melodyNote - 69) / 12))
+                playTone(frequency, settings.wave, 0.15, 0.22, now)
+            }
+
+            if (step % 4 === 0) {
+                const bassNote = bass[Math.floor(step / 32) % bass.length]
+                const bassFrequency = 440 * (2 ** ((bassNote - 69) / 12))
+                playTone(bassFrequency, "sine", 0.12, 0.35, now)
+            }
+
+            step += 1
+        }
+
+        await context.resume()
+        if (requestId !== musicRequestId || menuSoundContext !== context || context.state !== "running") return false
+
+        const now = context.currentTime
+        masterGain.gain.setValueAtTime(0, now)
+        masterGain.gain.linearRampToValueAtTime(1, now + 0.8)
+        playMusicStep()
+        menuSoundInterval = window.setInterval(playMusicStep, settings.interval)
+        return true
+    } catch (_) {
+        if (requestId === musicRequestId) stopMenuSound()
+        return false
+    }
+}
+
+function changeMusicStage(stage) {
+    currentMusicStage = stage
+    if (!menuAudioEnabled) return
+
+    startStageMusic(stage).then(started => {
+        if (!started && menuAudioEnabled) {
+            menuAudioEnabled = false
+            updateMenuSoundButton(false)
+        }
+    })
+}
+
+function updateMenuSoundButton(enabled) {
+    const button = document.getElementById("menu-audio-toggle")
+    if (!button) return
+
+    button.setAttribute("aria-pressed", String(enabled))
+    button.setAttribute("aria-label", enabled ? "Silenciar música" : "Ativar música")
+    button.querySelector(".audio-label").textContent = enabled ? "Som ativado" : "Som silenciado"
+}
+
 function startGame(level) {
+    if (!isLevelUnlocked(level)) return
+
     selectedLevel = level
+    changeMusicStage(`game-${level}`)
 
     const startScreen = document.getElementById("start-screen")
+    const levelScreen = document.getElementById("level-screen")
     const gameScreen = document.getElementById("game-screen")
 
-    startScreen.classList.add("hidden")
+    if (startScreen) startScreen.classList.add("hidden")
+    if (levelScreen) levelScreen.classList.add("hidden")
     gameScreen.classList.remove("hidden")
 
     resetLevel()
 }
+
+document.addEventListener("DOMContentLoaded", () => {
+    const startButton = document.getElementById("start-button")
+    const startScreen = document.getElementById("start-screen")
+    const levelScreen = document.getElementById("level-screen")
+    const audioButton = document.getElementById("menu-audio-toggle")
+    const backButton = document.getElementById("level-back-button")
+
+    renderLevelSelection()
+    mountSelectionRobot()
+
+    document.querySelectorAll("#level-screen .level-card").forEach(card => {
+        card.addEventListener("click", () => startGame(card.dataset.level))
+    })
+
+    if (audioButton) {
+        startStageMusic("menu").then(started => {
+            menuAudioEnabled = started
+            updateMenuSoundButton(started)
+            if (!started) audioButton.title = "Clique para ativar a música"
+        })
+    }
+
+    if (startButton) {
+        startButton.addEventListener("click", () => {
+            renderLevelSelection()
+            startScreen.classList.add("hidden")
+            levelScreen.classList.remove("hidden")
+            changeMusicStage("levels")
+        })
+    }
+
+    if (backButton) {
+        backButton.addEventListener("click", () => {
+            levelScreen.classList.add("hidden")
+            startScreen.classList.remove("hidden")
+            changeMusicStage("menu")
+        })
+    }
+
+    if (audioButton) {
+        audioButton.addEventListener("click", async () => {
+            if (menuAudioEnabled) {
+                menuAudioEnabled = false
+                stopMenuSound()
+                updateMenuSoundButton(false)
+                return
+            }
+
+            menuAudioEnabled = true
+            audioButton.disabled = true
+            const started = await startStageMusic(currentMusicStage)
+            menuAudioEnabled = started
+            updateMenuSoundButton(started)
+            audioButton.title = started ? "Silenciar música" : "Áudio indisponível neste navegador"
+            audioButton.disabled = false
+        })
+    }
+})
 
 
 
@@ -441,38 +734,6 @@ function stepMove(dir) {
 
     checkLightPosition()
 }
-
-
-// ======================================================
-// TECLADO
-// ======================================================
-
-document.addEventListener("keydown", (e) => {
-
-    if (running || quizActive) {
-        return
-    }
-
-
-    if (e.key === "ArrowUp") {
-
-        stepMove("up")
-
-    } else if (e.key === "ArrowDown") {
-
-        stepMove("down")
-
-    } else if (e.key === "ArrowLeft") {
-
-        stepMove("left")
-
-    } else if (e.key === "ArrowRight") {
-
-        stepMove("right")
-
-    }
-
-})
 
 
 // ======================================================
@@ -981,6 +1242,8 @@ function checkWin() {
 
         return false
     }
+
+    recordLevelCompletion(selectedLevel)
 
 
     running = false
