@@ -56,7 +56,7 @@
                     </button>
                     <p class="menu-caption"><span class="status-light" aria-hidden="true"></span> Uma aventura de lógica começa aqui</p>
                 </div>
-                <div class="start-illustration" role="img" aria-label="Robô Mini LightBot flutuando em uma plataforma futurista, ao lado de uma lâmpada acesa">
+                <div class="start-illustration" role="img" aria-label="Robô Mini LightBot flutuando em uma plataforma futurista">
                     <div class="stage-halo" aria-hidden="true"></div>
                     <div class="stage-grid" aria-hidden="true"></div>
                     <span class="scene-particle particle-one" aria-hidden="true"></span>
@@ -172,13 +172,6 @@
                         <circle cx="204" cy="182" r="4" fill="url(#bot-gold)" />
                     </svg>
                     </div>
-                    <span class="lamp-orbit" aria-hidden="true">
-                        <svg viewBox="0 0 32 40" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M16 3a11 11 0 0 0-7 19.5c1.6 1.4 2.5 3 2.7 4.5h8.6c.2-1.5 1.1-3.1 2.7-4.5A11 11 0 0 0 16 3Z" fill="#FFE995" stroke="#FFF4C6" stroke-width="2" />
-                            <path d="M12 31h8M13.5 35h5" stroke="#B9D3FF" stroke-width="2.5" stroke-linecap="round" />
-                            <path d="M16 0v-2M3 8 1 7M29 8l2-1" stroke="#FFF1A8" stroke-width="2" stroke-linecap="round" />
-                        </svg>
-                    </span>
                     <svg class="stage-platform" viewBox="0 0 420 120" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                         <defs>
                             <linearGradient id="platform-top" x1="0" y1="0" x2="1" y2="1">
@@ -256,7 +249,7 @@
                         <span class="level-card-description">QUESTÕES INTERMEDIÁRIAS</span>
                         <span class="level-lock" aria-hidden="true">
                             <svg viewBox="0 0 24 24"><path d="M7 10V7a5 5 0 0 1 10 0v3m-11 0h12a2 2 0 0 1 2 2v8H4v-8a2 2 0 0 1 2-2Zm6 4v3" /></svg>
-                            <small>Complete Médio</small>
+                            <small>Complete Fácil</small>
                         </span>
                         <span class="level-card-sheen" aria-hidden="true"></span>
                     </button>
@@ -298,6 +291,7 @@
                         <div class="status">
                             <span id="direction">Direção: →</span>
                             <span id="position">Posição: 0,0</span>
+                            <span id="lamp-progress">Lâmpadas: 0/2</span>
                         </div>
                     </div>
                     <div class="grid-view">
@@ -310,7 +304,7 @@
                         <span class="panel-title">Comandos</span>
                     </div>
 
-                    <div id="controls" class="control-buttons"> 
+                    <div id="command-actions" class="control-buttons">
                         <div class="action-move">
                             <button type="button" onclick="runCommands()">Executar</button>
                             <button type="button" onclick="resetLevel()">Reiniciar</button>
@@ -324,7 +318,7 @@
                         <div id="command-preview" class="preview"></div>
                     </div>
                 
-                    <div id="controls" class="control-buttons">
+                    <div id="command-buttons" class="control-buttons">
                         <div class="add-move">
                             <button type="button" onclick="addCommand('frente')">Frente</button>
                             <button type="button" onclick="addCommand('direita')">Direita</button>
@@ -334,46 +328,37 @@
                 </section>
             </main>
 
-            <div id="question-modal" class="modal-overlay">
-
-            <div class="modal question-modal">
-
-                <div class="modal-icon">💡</div>
-
-                <span id="question-difficulty" class="question-difficulty">
-                    TI • Médio
-                </span>
-
-                <h2 id="question-title">
-                    Pergunta de TI
-                </h2>
-
-                <p id="question-text"></p>
-
-                <div id="question-options" class="question-options"></div>
-
-                <div id="question-feedback" class="question-feedback"></div>
-
+            <div
+                id="question-modal"
+                class="modal-overlay"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="question-title"
+                aria-describedby="question-text question-feedback"
+                aria-hidden="true">
+                <div class="modal question-modal">
+                    <div class="modal-icon" aria-hidden="true">💡</div>
+                    <span id="question-difficulty" class="question-difficulty">TI</span>
+                    <h2 id="question-title">Pergunta de TI</h2>
+                    <p id="question-text"></p>
+                    <div id="question-options" class="question-options"></div>
+                    <div id="question-feedback" class="question-feedback" role="status" aria-live="polite"></div>
+                </div>
             </div>
 
-            <!-- MODAL DE VITÓRIA -->
-            <div id="win-modal" class="modal-overlay">
-
+            <div
+                id="win-modal"
+                class="modal-overlay"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="win-title"
+                aria-describedby="win-message"
+                aria-hidden="true">
                 <div class="modal">
-
-                    <div class="modal-icon">🎉</div>
-
-                    <h2>Parabéns!</h2>
-
-                    <p>
-                        Você conseguiu acender todas as luzes!
-                    </p>
-
-                    <button
-                        type="button"
-                        onclick="closeWinModal()">
-                        OK
-                    </button>
+                    <div class="modal-icon" aria-hidden="true">🎉</div>
+                    <h2 id="win-title">Parabéns!</h2>
+                    <p id="win-message">Você conseguiu acender todas as lâmpadas!</p>
+                    <button id="win-confirm-button" type="button" onclick="closeWinModal()">Continuar</button>
                 </div>
             </div>
         </div>

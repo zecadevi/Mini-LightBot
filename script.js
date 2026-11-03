@@ -3,16 +3,43 @@ let selectedLevel = null
 
 const levelSettings = {
     facil: {
-        lights: 2
+        label: "Fácil",
+        lamps: [
+            { x: 2, y: 1 },
+            { x: 4, y: 3 }
+        ]
     },
-
     medio: {
-        lights: 5
+        label: "Médio",
+        lamps: [
+            { x: 2, y: 1 },
+            { x: 4, y: 3 },
+            { x: 1, y: 3 },
+            { x: 3, y: 4 },
+            { x: 4, y: 0 }
+        ]
     },
-
     dificil: {
-        lights: 11
+        label: "Difícil",
+        lamps: [
+            { x: 2, y: 1 },
+            { x: 4, y: 3 },
+            { x: 0, y: 2 },
+            { x: 2, y: 2 },
+            { x: 3, y: 2 },
+            { x: 1, y: 4 },
+            { x: 2, y: 4 },
+            { x: 0, y: 4 },
+            { x: 1, y: 0 },
+            { x: 3, y: 0 },
+            { x: 4, y: 1 }
+        ]
     }
+}
+
+function createLightsForLevel(level) {
+    const settings = levelSettings[level]
+    return settings.lamps.map(({ x, y }) => ({ x, y, on: false }))
 }
 
 let menuSoundContext = null
@@ -37,7 +64,7 @@ function readCompletedLevels() {
 
 function isLevelUnlocked(level) {
     const index = levelSequence.indexOf(level)
-    return index <= 0 || completedLevels.includes(levelSequence[index - 1])
+    return index === 0 || (index > 0 && completedLevels.includes(levelSequence[index - 1]))
 }
 
 function renderLevelSelection() {
@@ -47,11 +74,14 @@ function renderLevelSelection() {
         const level = card.dataset.level
         const unlocked = isLevelUnlocked(level)
         const lock = card.querySelector(".level-lock")
+        const count = card.querySelector(".level-card-count")
+        const lampCount = levelSettings[level]?.lamps.length ?? 0
 
         card.disabled = !unlocked
         card.setAttribute("aria-disabled", String(!unlocked))
         card.classList.toggle("is-locked", !unlocked)
         if (lock) lock.hidden = unlocked
+        if (count) count.firstChild.textContent = `${String(lampCount).padStart(2, "0")} `
     })
 }
 
@@ -63,6 +93,28 @@ function mountSelectionRobot() {
     const robot = source.cloneNode(true)
     robot.classList.add("level-hero-robot")
     robot.setAttribute("focusable", "false")
+
+    const elementsWithIds = Array.from(robot.querySelectorAll("[id]"))
+    const idMap = new Map(
+        elementsWithIds.map(element => [element.id, `selection-${element.id}`])
+    )
+
+    elementsWithIds.forEach(element => {
+        element.id = idMap.get(element.id)
+    })
+
+    robot.querySelectorAll("*").forEach(element => {
+        Array.from(element.attributes).forEach(attribute => {
+            const updatedValue = attribute.value
+                .replace(/url\(#([^)]+)\)/g, (_, id) => `url(#${idMap.get(id) || id})`)
+                .replace(/^#(.+)$/, (_, id) => `#${idMap.get(id) || id}`)
+
+            if (updatedValue !== attribute.value) {
+                element.setAttribute(attribute.name, updatedValue)
+            }
+        })
+    })
+
     mount.appendChild(robot)
 }
 
@@ -245,7 +297,7 @@ function updateMenuSoundButton(enabled) {
 }
 
 function startGame(level) {
-    if (!isLevelUnlocked(level)) return
+    if (!levelSettings[level] || !isLevelUnlocked(level)) return
 
     selectedLevel = level
     changeMusicStage(`game-${level}`)
@@ -256,6 +308,7 @@ function startGame(level) {
 
     if (startScreen) startScreen.classList.add("hidden")
     if (levelScreen) levelScreen.classList.add("hidden")
+    if (!gameScreen) return
     gameScreen.classList.remove("hidden")
 
     resetLevel()
@@ -327,7 +380,6 @@ document.addEventListener("DOMContentLoaded", () => {
 const gridSize = 5
 
 const grid = document.getElementById("grid")
-const commandList = document.getElementById("command-list")
 const directionDisplay = document.getElementById("direction")
 const positionDisplay = document.getElementById("position")
 
@@ -343,20 +395,7 @@ const arrows = {
 // LÂMPADAS
 // ======================================================
 
-let lights = [
-    {
-        x: 2,
-        y: 1,
-        on: false,
-        questionUsed: []
-    },
-    {
-        x: 4,
-        y: 3,
-        on: false,
-        questionUsed: []
-    }
-]
+let lights = createLightsForLevel("facil")
 
 
 // ======================================================
@@ -379,148 +418,239 @@ let currentQuestion = null
 let currentLight = null
 
 let questionResolver = null
+let usedQuestionIds = []
+let answerTimer = null
+let winTimer = null
 
 
 // ======================================================
-// BANCO DE PERGUNTAS
-// DIFICULDADE: MÉDIA
+// BANCO DE PERGUNTAS POR DIFICULDADE
 // ======================================================
 
-const questionBank = [
-
-    {
-        question: "O que significa HTML?",
-        options: [
-            "HyperText Markup Language",
-            "HighText Machine Language",
-            "HyperTool Multi Language",
-            "HomeText Markup Language"
-        ],
-        correct: 0
-    },
-
-    {
-        question: "Qual linguagem é executada principalmente no navegador para criar interações em páginas web?",
-        options: [
-            "JavaScript",
-            "SQL",
-            "Python",
-            "C"
-        ],
-        correct: 0
-    },
-
-    {
-        question: "Qual propriedade CSS é utilizada para alterar a cor de fundo de um elemento?",
-        options: [
-            "background-color",
-            "font-color",
-            "color-background",
-            "bg-color"
-        ],
-        correct: 0
-    },
-
-    {
-        question: "Qual destas opções representa uma estrutura de repetição?",
-        options: [
-            "for",
-            "const",
-            "return",
-            "import"
-        ],
-        correct: 0
-    },
-
-    {
-        question: "Em JavaScript, qual palavra-chave é utilizada para declarar uma variável que não pode ser reatribuída?",
-        options: [
-            "const",
-            "let",
-            "var",
-            "static"
-        ],
-        correct: 0
-    },
-
-    {
-        question: "Qual tecnologia é utilizada para estruturar o conteúdo de uma página web?",
-        options: [
-            "HTML",
-            "CSS",
-            "JavaScript",
-            "SQL"
-        ],
-        correct: 0
-    },
-
-    {
-        question: "Qual tecnologia é responsável principalmente pela aparência e estilização de uma página web?",
-        options: [
-            "CSS",
-            "HTML",
-            "SQL",
-            "JSON"
-        ],
-        correct: 0
-    },
-
-    {
-        question: "O que é uma função em programação?",
-        options: [
-            "Um bloco de código criado para executar uma tarefa",
-            "Um tipo de banco de dados",
-            "Um arquivo de imagem",
-            "Um sistema operacional"
-        ],
-        correct: 0
-    },
-
-    {
-        question: "Qual destas opções é um banco de dados?",
-        options: [
-            "MySQL",
-            "HTML",
-            "CSS",
-            "Git"
-        ],
-        correct: 0
-    },
-
-    {
-        question: "Qual comando Git é utilizado para enviar alterações para um repositório remoto?",
-        options: [
-            "git push",
-            "git pull",
-            "git clone",
-            "git init"
-        ],
-        correct: 0
-    },
-
-    {
-        question: "Qual tipo de dado JavaScript representa verdadeiro ou falso?",
-        options: [
-            "Boolean",
-            "String",
-            "Number",
-            "Array"
-        ],
-        correct: 0
-    },
-
-    {
-        question: "O que significa API?",
-        options: [
-            "Application Programming Interface",
-            "Advanced Programming Internet",
-            "Application Process Integration",
-            "Automated Program Interface"
-        ],
-        correct: 0
-    }
-
-]
+const questionBanks = {
+    facil: [
+        {
+            question: "O que significa HTML?",
+            options: ["HyperText Markup Language", "HighText Machine Language", "HyperTool Multi Language", "HomeText Markup Language"],
+            correct: 0,
+            explanation: "HTML é a linguagem de marcação usada para estruturar o conteúdo de páginas web."
+        },
+        {
+            question: "Qual tecnologia define principalmente a aparência de uma página web?",
+            options: ["HTML", "CSS", "JavaScript", "SQL"],
+            correct: 1,
+            explanation: "CSS controla a apresentação visual, como cores, fontes e espaçamentos."
+        },
+        {
+            question: "Qual linguagem é usada para criar interações em páginas web?",
+            options: ["SQL", "HTML", "JavaScript", "CSS"],
+            correct: 2,
+            explanation: "JavaScript permite implementar comportamentos e interações no navegador."
+        },
+        {
+            question: "Qual tipo de dado representa verdadeiro ou falso?",
+            options: ["Texto", "Número", "Lista", "Booleano"],
+            correct: 3,
+            explanation: "Valores booleanos representam uma das duas possibilidades: verdadeiro ou falso."
+        },
+        {
+            question: "Qual destes programas é um navegador de internet?",
+            options: ["MySQL", "Firefox", "Git", "Windows"],
+            correct: 1,
+            explanation: "Firefox é um navegador usado para acessar páginas e aplicações web."
+        },
+        {
+            question: "Qual comando JavaScript exibe uma mensagem no console?",
+            options: ["show()", "print.page()", "console.log()", "message()"],
+            correct: 2,
+            explanation: "console.log() escreve valores no console de desenvolvimento do navegador."
+        },
+        {
+            question: "Qual elemento HTML representa o título principal de uma página?",
+            options: ["<h1>", "<p>", "<img>", "<footer>"],
+            correct: 0,
+            explanation: "O elemento h1 identifica o título de maior nível da página."
+        },
+        {
+            question: "Qual destes valores é um número?",
+            options: ["'42'", "42", "true", "azul"],
+            correct: 1,
+            explanation: "Sem aspas, 42 é um valor numérico; entre aspas seria texto."
+        },
+        {
+            question: "Qual estrutura permite repetir instruções em um programa?",
+            options: ["if", "return", "for", "const"],
+            correct: 2,
+            explanation: "Laços como for repetem um bloco de instruções de acordo com uma condição."
+        },
+        {
+            question: "Qual atributo de um link HTML indica o endereço de destino?",
+            options: ["src", "alt", "class", "href"],
+            correct: 3,
+            explanation: "O atributo href informa para qual endereço o link deve navegar."
+        },
+        {
+            question: "Qual extensão é normalmente usada em arquivos JavaScript?",
+            options: [".js", ".css", ".html", ".jpg"],
+            correct: 0,
+            explanation: "Arquivos com código JavaScript normalmente usam a extensão .js."
+        },
+        {
+            question: "Qual dispositivo encaminha dados entre redes, como a rede doméstica e a internet?",
+            options: ["Monitor", "Roteador", "Teclado", "Impressora"],
+            correct: 1,
+            explanation: "O roteador encaminha o tráfego entre dispositivos e redes."
+        }
+    ],
+    medio: [
+        {
+            question: "Qual linguagem é executada principalmente no navegador para criar interações em páginas web?",
+            options: ["JavaScript", "SQL", "Python", "C"],
+            correct: 0,
+            explanation: "JavaScript é executado no navegador para implementar interações e lógica de interface."
+        },
+        {
+            question: "Qual propriedade CSS altera a cor de fundo de um elemento?",
+            options: ["background-color", "font-color", "color-background", "bg-color"],
+            correct: 0,
+            explanation: "A propriedade background-color define a cor de fundo; color define a cor do texto."
+        },
+        {
+            question: "Qual destas opções representa uma estrutura de repetição?",
+            options: ["for", "const", "return", "import"],
+            correct: 0,
+            explanation: "for é um laço que executa instruções repetidamente."
+        },
+        {
+            question: "Qual palavra-chave declara uma variável que não pode ser reatribuída?",
+            options: ["const", "let", "var", "static"],
+            correct: 0,
+            explanation: "Uma variável declarada com const não pode receber outra atribuição."
+        },
+        {
+            question: "Qual tecnologia estrutura o conteúdo de uma página web?",
+            options: ["HTML", "CSS", "JavaScript", "SQL"],
+            correct: 0,
+            explanation: "HTML organiza elementos e conteúdo da página."
+        },
+        {
+            question: "O que é uma função em programação?",
+            options: ["Um bloco de código criado para executar uma tarefa", "Um tipo de banco de dados", "Um arquivo de imagem", "Um sistema operacional"],
+            correct: 0,
+            explanation: "Uma função agrupa instruções para executar uma tarefa e pode receber dados."
+        },
+        {
+            question: "Qual destas opções é um sistema de gerenciamento de banco de dados?",
+            options: ["MySQL", "HTML", "CSS", "Git"],
+            correct: 0,
+            explanation: "MySQL é um sistema de gerenciamento de banco de dados relacional."
+        },
+        {
+            question: "Qual comando Git envia commits para um repositório remoto?",
+            options: ["git push", "git pull", "git clone", "git init"],
+            correct: 0,
+            explanation: "git push envia os commits locais para um repositório remoto."
+        },
+        {
+            question: "Qual tecnologia é responsável principalmente pelo estilo visual de uma página?",
+            options: ["CSS", "HTML", "SQL", "JSON"],
+            correct: 0,
+            explanation: "CSS define estilos visuais como cores, tipografia e layout."
+        },
+        {
+            question: "O que significa API?",
+            options: ["Application Programming Interface", "Advanced Programming Internet", "Application Process Integration", "Automated Program Interface"],
+            correct: 0,
+            explanation: "Uma API define uma interface para que sistemas ou componentes troquem informações."
+        },
+        {
+            question: "Qual estrutura JavaScript permite executar um bloco apenas quando uma condição é verdadeira?",
+            options: ["if", "for", "import", "break"],
+            correct: 0,
+            explanation: "if avalia uma condição e executa seu bloco quando o resultado é verdadeiro."
+        },
+        {
+            question: "Para que serve JSON em aplicações web?",
+            options: ["Representar e trocar dados estruturados", "Estilizar páginas", "Editar imagens", "Compilar JavaScript"],
+            correct: 0,
+            explanation: "JSON é um formato textual comum para representar e trocar dados estruturados."
+        }
+    ],
+    dificil: [
+        {
+            question: "Qual declaração JavaScript define uma função chamada soma que recebe dois parâmetros?",
+            options: ["soma function(a, b)", "function soma = (a, b)", "function soma(a, b)", "def soma(a, b)"],
+            correct: 2,
+            explanation: "A sintaxe function soma(a, b) declara uma função com dois parâmetros."
+        },
+        {
+            question: "Em JavaScript, qual é o índice do primeiro elemento de um array?",
+            options: ["1", "-1", "Depende do tamanho", "0"],
+            correct: 3,
+            explanation: "Os índices de arrays JavaScript começam em zero."
+        },
+        {
+            question: "O que significa o código de status HTTP 404?",
+            options: ["Acesso autorizado", "Recurso não encontrado", "Erro interno do servidor", "Solicitação concluída"],
+            correct: 1,
+            explanation: "HTTP 404 indica que o servidor não encontrou o recurso solicitado."
+        },
+        {
+            question: "Qual comando SQL consulta registros de uma tabela?",
+            options: ["SELECT", "UPDATE", "INSERT", "DROP"],
+            correct: 0,
+            explanation: "SELECT recupera dados de uma ou mais tabelas."
+        },
+        {
+            question: "Para que serve uma branch no Git?",
+            options: ["Apagar o histórico", "Instalar dependências", "Desenvolver uma linha de trabalho isolada", "Publicar uma página"],
+            correct: 2,
+            explanation: "Uma branch permite desenvolver alterações em uma linha de trabalho separada."
+        },
+        {
+            question: "Qual é a finalidade de uma chave primária em uma tabela relacional?",
+            options: ["Armazenar arquivos", "Identificar unicamente cada registro", "Ordenar automaticamente todas as colunas", "Criptografar os dados"],
+            correct: 1,
+            explanation: "A chave primária identifica cada registro e não deve se repetir."
+        },
+        {
+            question: "Qual método HTTP é normalmente usado para solicitar a leitura de um recurso?",
+            options: ["POST", "DELETE", "GET", "PATCH"],
+            correct: 2,
+            explanation: "GET solicita a representação de um recurso sem ter como objetivo alterá-lo."
+        },
+        {
+            question: "Em CSS, qual seletor tem maior especificidade entre estas opções?",
+            options: [".menu", "div", "#menu", "*"],
+            correct: 2,
+            explanation: "Um seletor de ID tem maior especificidade que seletores de classe, elemento ou universal."
+        },
+        {
+            question: "Qual serviço traduz nomes de domínio em endereços IP?",
+            options: ["DHCP", "FTP", "SMTP", "DNS"],
+            correct: 3,
+            explanation: "O DNS resolve nomes de domínio para os endereços usados na comunicação de rede."
+        },
+        {
+            question: "Qual elemento HTML semântico costuma agrupar os principais links de navegação?",
+            options: ["<nav>", "<span>", "<aside>", "<figure>"],
+            correct: 0,
+            explanation: "O elemento nav identifica uma área de navegação, ajudando estrutura e tecnologias assistivas."
+        },
+        {
+            question: "Se um algoritmo percorre uma lista uma única vez, qual é sua complexidade temporal típica?",
+            options: ["O(1)", "O(n)", "O(n²)", "O(2ⁿ)"],
+            correct: 1,
+            explanation: "Uma passagem proporcional ao número de elementos tem crescimento linear, O(n)."
+        },
+        {
+            question: "Qual protocolo protege a comunicação web com criptografia TLS?",
+            options: ["HTTP", "FTP", "HTTPS", "Telnet"],
+            correct: 2,
+            explanation: "HTTPS usa TLS para proteger a comunicação entre o navegador e o servidor."
+        }
+    ]
+}
 
 
 // ======================================================
@@ -635,6 +765,11 @@ function updateStatus() {
     positionDisplay.textContent =
         `Posição: ${robotX},${robotY}`
 
+    const lampProgress = document.getElementById("lamp-progress")
+    const litLamps = lights.filter(light => light.on).length
+    if (lampProgress) {
+        lampProgress.textContent = `Lâmpadas: ${litLamps}/${lights.length}`
+    }
 
     const countEl =
         document.getElementById("command-count")
@@ -678,19 +813,11 @@ function addCommand(cmd) {
         return
     }
 
+    if (!["frente", "direita", "esquerda"].includes(cmd)) {
+        return
+    }
+
     commands.push(cmd)
-
-    updateStatus()
-}
-
-
-// ======================================================
-// LIMPAR COMANDOS
-// ======================================================
-
-function clearCommands() {
-
-    commands = []
 
     updateStatus()
 }
@@ -712,27 +839,6 @@ function setControlsEnabled(enabled) {
         button.disabled = !enabled
 
     })
-}
-
-
-// ======================================================
-// MOVIMENTO PELO TECLADO
-// ======================================================
-
-function stepMove(dir) {
-
-    if (running || quizActive) {
-        return
-    }
-
-
-    direction = dir
-
-    moveForward()
-
-    updateGrid()
-
-    checkLightPosition()
 }
 
 
@@ -858,45 +964,47 @@ function checkLightPosition() {
 // ESCOLHE UMA PERGUNTA ALEATÓRIA
 // ======================================================
 
-function getRandomQuestion(light) {
+function shuffleQuestionOptions(question) {
+    const options = question.options.map((text, index) => ({
+        text,
+        correct: index === question.correct
+    }))
 
-    let availableQuestions =
-        questionBank.filter(
-            (_, index) =>
-                !light.questionUsed.includes(index)
-        )
-
-
-    // Se todas já foram usadas,
-    // libera o banco novamente.
-
-    if (availableQuestions.length === 0) {
-
-        light.questionUsed = []
-
-        availableQuestions = [...questionBank]
+    for (let index = options.length - 1; index > 0; index--) {
+        const randomIndex = Math.floor(Math.random() * (index + 1))
+        const currentOption = options[index]
+        options[index] = options[randomIndex]
+        options[randomIndex] = currentOption
     }
 
+    return {
+        ...question,
+        options: options.map(option => option.text),
+        correct: options.findIndex(option => option.correct)
+    }
+}
 
-    const randomIndex =
-        Math.floor(
-            Math.random() *
-            availableQuestions.length
-        )
+function getRandomQuestion() {
+    const bank = questionBanks[selectedLevel]
+    if (!bank || bank.length === 0) {
+        throw new Error(`Nenhuma pergunta cadastrada para o nível "${selectedLevel}".`)
+    }
 
+    let availableQuestionIds = bank
+        .map((_, index) => index)
+        .filter(index => !usedQuestionIds.includes(index))
 
-    const selected =
-        availableQuestions[randomIndex]
+    if (availableQuestionIds.length === 0) {
+        usedQuestionIds = []
+        availableQuestionIds = bank.map((_, index) => index)
+    }
 
+    const questionId = availableQuestionIds[
+        Math.floor(Math.random() * availableQuestionIds.length)
+    ]
+    usedQuestionIds.push(questionId)
 
-    const originalIndex =
-        questionBank.indexOf(selected)
-
-
-    light.questionUsed.push(originalIndex)
-
-
-    return selected
+    return shuffleQuestionOptions(bank[questionId])
 }
 
 
@@ -910,12 +1018,14 @@ function openQuestion(light) {
 
     currentLight = light
 
-    currentQuestion =
-        getRandomQuestion(light)
+    currentQuestion = getRandomQuestion()
 
 
     const modal =
         document.getElementById("question-modal")
+
+    const difficulty =
+        document.getElementById("question-difficulty")
 
     const questionText =
         document.getElementById("question-text")
@@ -927,6 +1037,7 @@ function openQuestion(light) {
         document.getElementById("question-feedback")
 
 
+    difficulty.textContent = `TI • ${levelSettings[selectedLevel].label}`
     questionText.textContent =
         currentQuestion.question
 
@@ -939,34 +1050,24 @@ function openQuestion(light) {
         "question-feedback"
 
 
-    currentQuestion.options.forEach(
-        (option, index) => {
+    currentQuestion.options.forEach((option, index) => {
 
-            const button =
-                document.createElement("button")
+        const button = document.createElement("button")
 
-            button.type = "button"
+        button.type = "button"
 
-            button.textContent = option
+        button.textContent = option
 
-            button.classList.add(
-                "question-option"
-            )
+        button.classList.add("question-option")
 
+        button.addEventListener("click", () => answerQuestion(index))
 
-            button.onclick = () => {
+        optionsContainer.appendChild(button)
+    })
 
-                answerQuestion(index)
-
-            }
-
-
-            optionsContainer.appendChild(button)
-        }
-    )
-
-
+    modal.setAttribute("aria-hidden", "false")
     modal.classList.add("show")
+    optionsContainer.querySelector("button")?.focus()
 }
 
 
@@ -976,10 +1077,13 @@ function openQuestion(light) {
 
 function answerQuestion(selectedIndex) {
 
-    if (!currentQuestion) {
+    if (!currentQuestion || !currentLight) {
         return
     }
 
+    window.clearTimeout(answerTimer)
+    const question = currentQuestion
+    const light = currentLight
 
     const feedback =
         document.getElementById(
@@ -998,12 +1102,10 @@ function answerQuestion(selectedIndex) {
     // -----------------------------
 
     if (
-        selectedIndex ===
-        currentQuestion.correct
+        selectedIndex === question.correct
     ) {
 
-        feedback.textContent =
-            "✓ Resposta correta!"
+        feedback.textContent = `✓ Resposta correta! ${question.explanation}`
 
         feedback.classList.add("correct")
 
@@ -1015,18 +1117,14 @@ function answerQuestion(selectedIndex) {
         })
 
 
-        setTimeout(() => {
+        answerTimer = window.setTimeout(() => {
+            if (currentQuestion !== question || currentLight !== light) return
 
-            currentLight.on = true
-
+            light.on = true
             closeQuestionModal()
-
             updateGrid()
-
             checkWin()
-
-        }, 700)
-
+        }, 1100)
 
         return
     }
@@ -1036,8 +1134,7 @@ function answerQuestion(selectedIndex) {
     // RESPOSTA ERRADA
     // -----------------------------
 
-    feedback.textContent =
-        "✕ Resposta incorreta! Tente outra."
+    feedback.textContent = `Resposta incorreta. ${question.explanation} Você receberá outra questão para tentar acender esta lâmpada.`
 
     feedback.classList.add("wrong")
 
@@ -1049,11 +1146,10 @@ function answerQuestion(selectedIndex) {
     })
 
 
-    setTimeout(() => {
-
-        openQuestion(currentLight)
-
-    }, 700)
+    answerTimer = window.setTimeout(() => {
+        if (currentQuestion !== question || currentLight !== light) return
+        openQuestion(light)
+    }, 1800)
 }
 
 
@@ -1069,6 +1165,9 @@ function closeQuestionModal() {
         )
 
     modal.classList.remove("show")
+    modal.setAttribute("aria-hidden", "true")
+    window.clearTimeout(answerTimer)
+    answerTimer = null
 
     quizActive = false
 
@@ -1102,24 +1201,6 @@ function waitForQuestion(light) {
         openQuestion(light)
 
     })
-}
-
-
-// ======================================================
-// VERIFICA A LÂMPADA ATUAL
-// ======================================================
-
-async function handleLight() {
-
-    const light = checkLightPosition()
-
-
-    if (!light) {
-        return
-    }
-
-
-    await waitForQuestion(light)
 }
 
 
@@ -1238,7 +1319,7 @@ function checkWin() {
         )
 
 
-    if (!allLightsOn) {
+    if (!allLightsOn || !levelSettings[selectedLevel]) {
 
         return false
     }
@@ -1251,17 +1332,20 @@ function checkWin() {
     setControlsEnabled(false)
 
 
-    setTimeout(() => {
+    const modal = document.getElementById("win-modal")
+    const message = document.getElementById("win-message")
+    const nextLevel = levelSequence[levelSequence.indexOf(selectedLevel) + 1]
 
-        const modal =
-            document.getElementById(
-                "win-modal"
-            )
+    message.textContent = nextLevel
+        ? `Você acendeu todas as ${lights.length} lâmpadas do nível ${levelSettings[selectedLevel].label}. O nível ${levelSettings[nextLevel].label} foi desbloqueado!`
+        : `Você acendeu todas as ${lights.length} lâmpadas do nível ${levelSettings[selectedLevel].label}. Parabéns por concluir todos os níveis!`
 
+    window.clearTimeout(winTimer)
+    winTimer = window.setTimeout(() => {
+        modal.setAttribute("aria-hidden", "false")
         modal.classList.add("show")
-
+        document.getElementById("win-confirm-button").focus()
     }, 300)
-
 
     return true
 }
@@ -1280,13 +1364,11 @@ function closeWinModal() {
 
 
     modal.classList.remove("show")
+    modal.setAttribute("aria-hidden", "true")
 
-
-    setTimeout(() => {
+    window.setTimeout(() => {
 
         resetLevel()
-
-        setControlsEnabled(true)
 
     }, 250)
 }
@@ -1297,6 +1379,12 @@ function closeWinModal() {
 // ======================================================
 
 function resetLevel() {
+    if (!levelSettings[selectedLevel]) return
+
+    window.clearTimeout(answerTimer)
+    window.clearTimeout(winTimer)
+    answerTimer = null
+    winTimer = null
 
     robotX = 0
 
@@ -1317,33 +1405,17 @@ function resetLevel() {
     questionResolver = null
 
 
-    lights = [
-
-        {
-            x: 2,
-            y: 1,
-            on: false,
-            questionUsed: []
-        },
-
-        {
-            x: 4,
-            y: 3,
-            on: false,
-            questionUsed: []
-        }
-
-    ]
+    lights = createLightsForLevel(selectedLevel)
+    usedQuestionIds = []
 
 
-    document
-        .getElementById("question-modal")
-        .classList.remove("show")
+    const questionModal = document.getElementById("question-modal")
+    questionModal.classList.remove("show")
+    questionModal.setAttribute("aria-hidden", "true")
 
-
-    document
-        .getElementById("win-modal")
-        .classList.remove("show")
+    const winModal = document.getElementById("win-modal")
+    winModal.classList.remove("show")
+    winModal.setAttribute("aria-hidden", "true")
 
 
     setControlsEnabled(true)
